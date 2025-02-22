@@ -4,7 +4,7 @@ import Map from "./components/Map";
 
 
 function App() {
-  const [ backendData, setBackendData] = useState([{}])
+  const [backendData, setBackendData] = useState([{}])
  
   useEffect(() =>{
     fetch("/api").then(
@@ -21,6 +21,7 @@ function App() {
     <>
       <header>
         <h1>Hello World</h1>
+        <Map /> 
         {(typeof backendData.users === 'undefined') ? (
           <p>Loading...</p>
         ) : (
