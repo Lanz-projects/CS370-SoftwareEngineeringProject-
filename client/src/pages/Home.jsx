@@ -5,7 +5,7 @@ function Home (){
       <Navigationbar></Navigationbar>
       <h1> This is the Home Page</h1>
     </div>
-  )
+  );
 }
 
 export default Home;
