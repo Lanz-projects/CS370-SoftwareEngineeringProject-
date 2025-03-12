@@ -1,22 +1,30 @@
-import { Link } from "react-router-dom"
+import { Navbar, Nav, Container } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import styles from "./Navigationbar.module.css"; // Import CSS Module
 
 function Navigationbar() {
-  return(
-    <div className="top-nav-bar">
-      <nav>
-        <ul>
-          <li><Link to="/">Homepage</Link></li>
-          <li><Link to="/signup">Signup</Link></li>
-          <li><Link to="/login">Login</Link></li>
-          <li><Link to="/profile">profile</Link></li>
-          <li><Link to="/dashboard">dashboard</Link></li>
-          <li><Link to="/ridelistings">Ridelisting</Link></li>
-          <li><Link to="/settings">settings</Link></li>
-          <li><Link to="/notifications">notifications</Link></li>
-        </ul>
-      </nav>
-    </div>
-  )
+  return (
+    <Navbar className={styles.customNavbar} expand="lg">
+      <Container>
+        <Navbar.Brand as={Link} to="/" className={styles.customBrand}>
+          Truman Ride-Share
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/" className={styles.customNavLink}>Homepage</Nav.Link>
+            <Nav.Link as={Link} to="/signup" className={styles.customNavLink}>Signup</Nav.Link>
+            <Nav.Link as={Link} to="/login" className={styles.customNavLink}>Login</Nav.Link>
+            <Nav.Link as={Link} to="/profile" className={styles.customNavLink}>Profile</Nav.Link>
+            <Nav.Link as={Link} to="/dashboard" className={styles.customNavLink}>Dashboard</Nav.Link>
+            <Nav.Link as={Link} to="/ridelistings" className={styles.customNavLink}>Ridelisting</Nav.Link>
+            <Nav.Link as={Link} to="/settings" className={styles.customNavLink}>Settings</Nav.Link>
+            <Nav.Link as={Link} to="/notifications" className={styles.customNavLink}>Notifications</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
 }
 
-export default Navigationbar
+export default Navigationbar;

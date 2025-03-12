@@ -1,0 +1,9 @@
+.customNavbar {
+  background-color: #510b76 !important; /* Dark purple */
+  max-width: 100% !important;
+  height: 5rem !important;
+}
+
+.customBrand, .customNavLink {
+  color: #ffffff !important; /* White text */
+}

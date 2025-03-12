@@ -25,7 +25,6 @@ function App() {
         <Route path='/settings' element={<Settings />}/>
         <Route path='/notifications' element={<Notfications />}/>
       </Routes>
-      <Navigationbar></Navigationbar>
     </header>
   );
 }

@@ -1,4 +1,4 @@
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useState } from "react";
 import { app } from "../firebase";
 
@@ -9,10 +9,9 @@ function Registration() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
 
   const isValidEmail = (email) => {
-    // Allows only valid letters before domain
-    // Allows only @truman.edu domain
     const emailRegex = /^[a-zA-Z0-9._%+-]+@truman\.edu$/;
     return emailRegex.test(email);
   };
@@ -39,7 +38,29 @@ function Registration() {
       console.log("Signup Done");
       setSuccessMessage("Signup successful! You can now log in.");
       setSignUpError(""); // Clear errors when the signup is valid
-      
+    } catch (error) {
+      console.log(error);
+      setSignUpError(error.message);
+    }
+  };
+
+  const HandleGoogleSignup = async () => {
+    setSignUpError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      // Check if the user’s email is from @truman.edu
+      const emailDomain = user.email.split('@')[1];
+      if (emailDomain !== "truman.edu") {
+        await auth.signOut(); // Sign out if not allowed
+        setSignUpError("Only @truman.edu email domain is allowed.");
+        return;
+      }
+
+      setSuccessMessage("Google signup successful! You can now log in.");
     } catch (error) {
       console.log(error);
       setSignUpError(error.message);
@@ -48,7 +69,7 @@ function Registration() {
 
   return (
     <div>
-      <form onSubmit={HandleSignup}> 
+      <form onSubmit={HandleSignup}>
         <input 
           type="email" 
           value={email} 
@@ -62,6 +83,12 @@ function Registration() {
           placeholder="Enter your password" 
         />
         <button type="submit">SignUp</button>
+        
+        {/* Google Sign-up Button */}
+        <button type="button" onClick={HandleGoogleSignup}>
+          Sign up with Google
+        </button>
+
         {signUpError && <p style={{ color: "red" }}>{signUpError}</p>}
         {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
       </form>
