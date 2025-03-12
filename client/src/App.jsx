@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard'
 import RideListing from './pages/RideListing'
 import Settings from './pages/Settings'
 import Notfications from './pages/Notifications'
-import Navigationbar from './modules/Navigationbar'
+import Navigationbar from './components/Navigationbar'
 
 
 function App() {
