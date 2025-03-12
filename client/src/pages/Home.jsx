@@ -1,9 +1,10 @@
-import Navigationbar from "../components/Navigationbar"
-function Home (){
-  return( 
+import Navigationbar from "../components/Navigationbar";
+
+function Home() {
+  return(
     <div>
-      <Navigationbar></Navigationbar>
-      <h1> This is the Home Page</h1>
+      <Navigationbar />
+      <h1>This is the Home Page</h1>
     </div>
   );
 }

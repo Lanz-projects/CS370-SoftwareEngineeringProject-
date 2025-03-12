@@ -1,10 +1,10 @@
-import Navigationbar from "../components/Navigationbar"
+import Navigationbar from "../components/Navigationbar";
 
-function Notifications (){
-  return( 
+function Notifications() {
+  return(
     <div>
-      <Navigationbar></Navigationbar>
-      <h1> This is the Notifications Page</h1>
+      <Navigationbar />
+      <h1>This is the Notifications Page</h1>
     </div>
   );
 }
