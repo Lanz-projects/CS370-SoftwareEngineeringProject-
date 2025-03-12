@@ -37,7 +37,7 @@ const Map = () => {
 
 const RideListing = () => {
   return (
-    <div className="container-fluid d-flex">
+    <div className="container-fluid d-flex vh-100 p-0">
       {/* Map Section (70% - subject to change) */}
       <div className="col-8 p-0">
         <Map />
