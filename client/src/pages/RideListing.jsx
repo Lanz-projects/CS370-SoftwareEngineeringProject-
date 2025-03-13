@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Navigationbar from "../components/Navigationbar";
 
 const containerStyle = {
   width: "100%",
@@ -30,8 +29,8 @@ const Map = () => {
   if (!isLoaded) return <div>Loading map...</div>;
 
   return (
-    <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12} onLoad={onLoad}>
-      <Marker position={center} />
+    <GoogleMap mapContainerStyle = {containerStyle} center = {center} zoom = {12} onLoad = {onLoad}>
+      <Marker position = {center} />
     </GoogleMap>
   );
 };
@@ -40,26 +39,25 @@ const RideListing = () => {
   return (
     <div>
       {/* Add Navigationbar at the top */}
-      <Navigationbar />
 
-      <div className="container-fluid d-flex vh-100 p-0">
+      <div className = "container-fluid d-flex vh-100 p-0">
         {/* Map Section (70%) */}
-        <div className="col-lg-8 col-md-7 p-0">
+        <div className = "col-lg-8 col-md-7 p-0">
           <Map />
         </div>
 
         {/* Ride Listings Section (30%) */}
-        <div className="col-lg-4 col-md-5 bg-dark text-white p-4 rounded-3">
-          <h3 className="mb-4">Ride Listings</h3>
-          <ul className="list-unstyled">
-            <li className="mb-3">
-              <div className="border p-3 rounded-3">
+        <div className = "col-lg-4 col-md-5 bg-dark text-white p-4 rounded-3">
+          <h3 className = "mb-4">Ride Listings</h3>
+          <ul className = "list-unstyled">
+            <li className = "mb-3">
+              <div className = "border p-3 rounded-3">
                 <h5>Ride to X Destination</h5>
                 <p>Looking for a ride to X. Let me know if you're heading that way!</p>
               </div>
             </li>
-            <li className="mb-3">
-              <div className="border p-3 rounded-3">
+            <li className = "mb-3">
+              <div className = "border p-3 rounded-3">
                 <h5>Going to Y Place</h5>
                 <p>I'm planning to go to Y place. Anyone interested in joining?</p>
               </div>
