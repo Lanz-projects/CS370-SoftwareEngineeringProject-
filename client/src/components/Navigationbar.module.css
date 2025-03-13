@@ -1,9 +1,77 @@
+/* Regular Navbar Styles */
 .customNavbar {
   background-color: #510b76 !important; /* Dark purple */
   max-width: 100% !important;
   height: 5rem !important;
+  z-index: 1050; /* Ensures the navbar is above other content */
 }
 
-.customBrand, .customNavLink {
+.customBrand {
   color: #ffffff !important; /* White text */
+}
+
+.customNavLink {
+  color: white !important;
+  font-weight: bold;
+  display: inline-block; /* Ensures horizontal layout on desktop */
+  padding: 1rem 1.5rem; /* Adds padding to the links */
+  text-align: center; /* Center-align text within links */
+}
+
+.customNavbar .navbar-collapse {
+  background-color: #510b76 !important; /* Dark purple background */
+}
+
+.customNavbar .navbar-toggler-icon {
+  background-color: #ffffff !important; /* White icon for the toggle button */
+}
+
+/* Desktop Styles: Links laid out horizontally */
+@media (min-width: 992px) {
+  .customNavbar .navbar-nav {
+    display: flex;
+    justify-content: center; /* Center links horizontally */
+    margin-top: 0; /* Ensure no extra margin on top of navbar */
+  }
+
+  .customNavLink {
+    display: inline-block; /* Keeps links inline for desktop */
+    padding: 1rem 2rem; /* Adjust padding for better spacing */
+    text-align: center; /* Keep text centered in links */
+    font-weight: bold; /* Bold font for better readability */
+  }
+}
+
+/* Mobile Styles (Collapsed Navbar) */
+@media (max-width: 991px) {
+  .customNavbar .navbar-collapse {
+    background-color: #510b76 !important; /* Ensure background on collapse */
+    position: absolute !important;
+    width: 100% !important;
+    top: 5rem; /* Align with navbar height */
+    z-index: 1050; /* Ensure the navbar is on top */
+  }
+
+  /* Adjust the container for links when collapsed on mobile */
+  .customeNavLinkContainer {
+    background-color: #510b76;
+    width: 75%;
+    margin: 3% auto; /* Center the container */
+    padding: 1rem 0;
+    border-radius: 10px; /* Rounded corners for the mobile menu */
+  }
+
+  .customNavbar .navbar-nav {
+    text-align: center; /* Center links inside collapsed navbar */
+    padding-top: 2rem; /* Add some padding at the top */
+  }
+
+  /* Mobile links styling */
+  .customNavLink {
+    color: white !important;
+    font-weight: bold;
+    padding: 1rem; /* Adds more padding for larger clickable area */
+    display: block; /* Stacks links vertically */
+    text-align: center; /* Ensures the text is centered */
+  }
 }
