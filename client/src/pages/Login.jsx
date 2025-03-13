@@ -4,9 +4,8 @@ import Navigationbar from "../components/Navigationbar";
 function Login() {
   return(
     <div>
-      <Navigationbar />
-      <h1>This is the Login page</h1>
-      <LoginFunc />
+      <Navigationbar></Navigationbar>
+      <LoginFunc></LoginFunc>
     </div>
   );
 }

@@ -4,9 +4,8 @@ import Navigationbar from "../components/Navigationbar";
 function Signup() {
   return(
     <div>
-      <Navigationbar />
-      <h1>This is the Signup page</h1>
-      <Registration />
+      <Navigationbar></Navigationbar>
+      <Registration></Registration>
     </div>
   );
 }

@@ -1,0 +1,62 @@
+/* login.module.css */
+
+/* Centering the card container */
+.cardContainer {
+  max-width: 50vw; /* Default for larger screens */
+  width: 100%;
+  border-radius: 10px; /* Soft rounded corners */
+  background-color: #ffffff; /* White background */
+  padding: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cardContainer {
+    max-width: 75vw; /* Increase width for smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .cardContainer {
+    max-width: 90vw; /* Even wider for mobile devices */
+  }
+}
+
+/* Input fields styling */
+.form-control {
+  border-radius: 1.5rem;
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+/* Styling for the buttons */
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border: none;
+  padding: 10px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-danger:hover {
+  background-color: #a71d2a;
+}
+
+/* Styling for error and success messages */
+.text-danger, .text-success {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
