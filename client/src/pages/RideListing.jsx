@@ -43,8 +43,6 @@ const RideListing = () => {
 
   return (
     <div>
-      {/* Add Navigationbar at the top */}
-
       <div className = "container-fluid d-flex vh-100 p-0">
         {/* Map Section (70%) */}
         <div className = "col-lg-8 col-md-7 p-0">
@@ -86,16 +84,16 @@ const RideListing = () => {
             <li className = "mb-3">
               <div className = "border p-3 rounded-3">
                 <h5>Ride to X Destination</h5>
-                <p>Looking for a ride to X. Let me know if you're heading that way!</p>
+                <p>Looking for a ride to X. Let me know if you're heading that way!</p> {/* Temp placeholders */}
               </div>
             </li>
             <li className = "mb-3">
               <div className = "border p-3 rounded-3">
                 <h5>Going to Y Place</h5>
-                <p>I'm planning to go to Y place. Anyone interested in joining?</p>
+                <p>I'm planning to go to Y place. Anyone interested in joining?</p> {/* Temp placeholders */}
               </div>
             </li>
-            {/* Add more listings here (likely pull from Firebase/MongoDB) */}
+            {/* Consider adding functionality for dynamically loading ride listings here */}
           </ul>
         </div>
       </div>
