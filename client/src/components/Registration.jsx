@@ -1,6 +1,7 @@
 import { getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useState } from "react";
 import { app } from "../firebase";
+import { useNavigate } from "react-router-dom";
 import styles from "./registration.module.css";
 
 function Registration() {
@@ -8,8 +9,11 @@ function Registration() {
   const [password, setPassword] = useState('');
   const [signUpError, setSignUpError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  // This is used to stop the user from clicking signup button more than once until
+  // the response from the server is recieved
+  const [isProcessing, setIsProcessing] = useState(false); 
 
+  const navigate = useNavigate();
   const auth = getAuth(app);
   const googleProvider = new GoogleAuthProvider();
 
@@ -24,6 +28,8 @@ function Registration() {
 
   const HandleSignup = async (e) => {
     e.preventDefault();
+    // Check whether email or password is valid. 
+    // This is an extra check, but firebase already handles this
     if (!isValidEmail(email) || !isValidPassword(password)) {
         setSignUpError("Invalid email or password.");
         return;
@@ -43,7 +49,7 @@ function Registration() {
         });
 
         setSuccessMessage("Signup successful!");
-        setSignUpError("");
+        setTimeout(() => navigate('/dashboard'), 1000) // Redirect after 1 second
     } catch (error) {
         setSignUpError(error.message);
     } finally {
@@ -56,23 +62,29 @@ function Registration() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
 
+      // Breaks up the domain of the email
       const emailDomain = result.user.email.split('@')[1];
       const email = result.user.email;
 
+      // Checks the email domain
       if (emailDomain !== "truman.edu") {
         await auth.signOut();
         setSignUpError("Only @truman.edu email domain is allowed.");
         return;
       }
 
+      // Recieves the token from firebase
+      // This is the "key" to get user info from Firebase
       const token = await result.user.getIdToken();
 
+      // Uses this to send information to backend to create a user in the database
       const signupResponse = await fetch('http://localhost:5000/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, email }),
       });
 
+      // This is the response from the backend after doing the POST request
       const signupData = await signupResponse.json();
 
       if (signupData.error) {
@@ -81,8 +93,7 @@ function Registration() {
       }
 
       setSuccessMessage("Google signup successful!");
-      setSignUpError("");  
-
+      setTimeout(() => navigate('/dashboard'), 1000) // Redirect after 1 second
     } catch (error) {
       setSignUpError(error.message);
     } finally {
@@ -135,9 +146,9 @@ function Registration() {
           {successMessage && <p className="text-success mt-2">{successMessage}</p>}
         </form>
 
-        {/* Note on linking accounts */}
+        {/* Information when signing up */}
         <div className="mt-4">
-          <p><strong>Note:</strong> 
+          <div><strong>Note:</strong> 
             <ul>
               <li>
                 If you sign up using the email/password method and then sign up with Google using the same email, your accounts will be linked. 
@@ -147,7 +158,7 @@ function Registration() {
                 You can only use ~@truman.edu when signing up.
               </li>
             </ul>
-            </p>
+            </div>
         </div>
       </div>
     </div>

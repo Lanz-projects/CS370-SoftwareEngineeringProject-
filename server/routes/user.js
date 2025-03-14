@@ -14,7 +14,17 @@ router.post('/api/signup', async (req, res) => {
           return res.status(401).json({ error: 'Unauthorized access' });
       }
 
-      const newUser = new User({ email });
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+          return res.status(400).json({ error: 'User already exists' });
+      }
+
+      // Create new user
+      const newUser = new User({ 
+          uid: decodedToken.uid, 
+          email 
+      });
       await newUser.save(); 
 
       res.status(201).json({ message: 'Google signup successful!', user: newUser });
@@ -23,6 +33,5 @@ router.post('/api/signup', async (req, res) => {
       res.status(400).json({ error: 'Error during signup: ' + error.message });
   }
 });
-
 
 module.exports = router;
