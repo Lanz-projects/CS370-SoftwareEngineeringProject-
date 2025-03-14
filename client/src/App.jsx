@@ -8,8 +8,7 @@ import Dashboard from './pages/Dashboard'
 import RideListing from './pages/RideListing'
 import Settings from './pages/Settings'
 import Notfications from './pages/Notifications'
-import Navigationbar from './components/Navigationbar'
-
+import TermsAndService from './pages/termsAndService'
 
 function App() {
   return(
@@ -24,6 +23,7 @@ function App() {
         <Route path='/ridelistings' element={<RideListing />}/>
         <Route path='/settings' element={<Settings />}/>
         <Route path='/notifications' element={<Notfications />}/>
+        <Route path='/terms-and-conditions' element={<TermsAndService />}/>
       </Routes>
     </header>
   );
