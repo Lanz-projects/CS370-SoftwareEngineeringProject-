@@ -20,7 +20,8 @@ function Login() {
     setSuccessMessage("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Handles the given user info (email and password) and sends it to Firebase 
+      await signInWithEmailAndPassword(auth, email, password); 
       setSuccessMessage("Login successful! Redirecting...");
       setTimeout(() => navigate("/dashboard"), 1000); // Redirect after 1 seconds
     } catch (error) {
@@ -33,13 +34,17 @@ function Login() {
     setSuccessMessage("");
 
     try {
+      // Allows you to select the account 
       googleProvider.setCustomParameters({ prompt: 'select_account' });
+      // Shows the google popup
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       
       // Get email domain
       const emailDomain = user.email.split('@')[1];
       
+      // Checks if the account has ~@truman.edu and 
+      // does not allow anything else
       if (emailDomain !== "truman.edu") {
         await signOut(auth);
         setLoginError("Only @truman.edu emails are allowed.");
