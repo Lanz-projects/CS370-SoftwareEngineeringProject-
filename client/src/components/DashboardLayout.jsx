@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAgreementPopup from "../components/UserAgreement"
+import RedirectUserInfoPopup from "./RedirectUserInfoPopup";
 
-const DashboardLayout = () => {
+function DashboardLayout(){
   const [showAgreement, setShowAgreement] = useState(false); // This checks the state whether to show the User Agreement
+  const [showNextPopup, setShowNextPopup] = useState(false); // This checks whether the next popup shows up
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,15 +52,26 @@ const DashboardLayout = () => {
       });
 
       setShowAgreement(false); // Closes the popup  
+      setShowNextPopup(true); // Opens the next popup
     } catch (error) {
       console.error("Error updating agreement status:", error);
     }
+  };
+
+  const handleGoToNextPage = () => {
+    setShowNextPopup(false);  
+    navigate("/extra-userinfo-form");  
+  };
+
+  const handleDoItLater = () => {
+    setShowNextPopup(false);
   };
 
   return (
     <div className="container mt-5">
       <h2>Welcome to Your Dashboard</h2>
       <UserAgreementPopup show={showAgreement} handleAccept={handleAcceptAgreement} />
+      <RedirectUserInfoPopup show={showNextPopup} onConfirm={handleGoToNextPage} onSkip={handleDoItLater} />
     </div>
   );
 }

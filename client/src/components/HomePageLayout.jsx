@@ -3,8 +3,7 @@ import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import styles from "./HomePageLayout.module.css";
 
-const HomePageLayout = () => {
-
+function HomePageLayout(){
   const navigate = useNavigate();
 
   return (

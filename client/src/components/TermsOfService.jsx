@@ -2,7 +2,7 @@ import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import styles from './TermsOfService.module.css';
 
-const TermsOfService = () => {
+function TermsOfService(){
   return (
     <Container className={styles.termsContainer}>
       <Row className="justify-content-center">

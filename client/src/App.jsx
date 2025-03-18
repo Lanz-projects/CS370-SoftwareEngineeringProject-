@@ -9,6 +9,7 @@ import RideListing from './pages/RideListing'
 import Settings from './pages/Settings'
 import Notfications from './pages/Notifications'
 import TermsAndService from './pages/termsAndService'
+import UserExtraInfoForm from './pages/UserExtraInfoForm'
 
 function App() {
   return(
@@ -24,6 +25,7 @@ function App() {
         <Route path='/settings' element={<Settings />}/>
         <Route path='/notifications' element={<Notfications />}/>
         <Route path='/terms-and-conditions' element={<TermsAndService />}/>
+        <Route path='/extra-userinfo-form' element={<UserExtraInfoForm />}/>
       </Routes>
     </header>
   );
