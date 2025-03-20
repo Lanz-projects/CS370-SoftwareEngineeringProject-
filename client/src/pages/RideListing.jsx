@@ -50,7 +50,7 @@ const RideListing = () => {
         </div>
 
         {/* Ride Listings Section (30%) */}
-        <div className = "col-lg-4 col-md-5 bg-dark text-white p-4 rounded-3">
+        <div className = "col-lg-4 col-md-5 bg-white text-black p-4 rounded-3">
           {/* Buttons for Request a Ride and Post a Ride Listing */}
           <div className = "d-flex justify-content-between mb-4">
             <button 

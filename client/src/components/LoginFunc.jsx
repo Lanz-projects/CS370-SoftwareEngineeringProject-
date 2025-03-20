@@ -1,8 +1,6 @@
 import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { app } from "../firebase";
-import styles from "./loginFunc.module.css"; // Import custom styles
+import { app } from "../firebase.js";
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -12,18 +10,19 @@ function Login() {
 
   const auth = getAuth(app);
   const googleProvider = new GoogleAuthProvider();
-  const navigate = useNavigate();
 
   const HandleLogin = async (e) => {
     e.preventDefault();
-    setLoginError("");
+    setLoginError(""); 
     setSuccessMessage("");
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setSuccessMessage("Login successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 1000); // Redirect after 1 seconds
+      setEmail("");
+      setPassword("");
     } catch (error) {
+      console.log(error);
       setLoginError(error.message);
     }
   };
@@ -33,59 +32,54 @@ function Login() {
     setSuccessMessage("");
 
     try {
-      googleProvider.setCustomParameters({ prompt: 'select_account' });
+      googleProvider.setCustomParameters({ prompt: 'select_account' }); // Forces popup every time
+  
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       
       // Get email domain
       const emailDomain = user.email.split('@')[1];
-      
+  
       if (emailDomain !== "truman.edu") {
-        await signOut(auth);
+        await signOut(auth); // Sign out if not allowed
         setLoginError("Only @truman.edu emails are allowed.");
         return;
       }
+  
       setSuccessMessage("Google Login successful! Redirecting...");
-      setTimeout(() => navigate("/dashboard"), 1000); // Redirect after 1 seconds
-    } catch (error) {
+    } 
+    catch (error) {
+      console.log(error);
       setLoginError(error.message);
     }
   };
 
   return (
-    <div className = {`container d-flex justify-content-center align-items-center vh-100`}>
-      <div className = {`card p-4 shadow-lg ${styles.cardContainer}`}>
-        <h2 className = "text-center mb-4">Login</h2>
-        <form onSubmit = {HandleLogin}>
-          <div className = "mb-3">
-            <label className = "form-label">Email</label>
-            <input 
-              type = "email" 
-              className = "form-control" 
-              value = {email} 
-              onChange = {(e) => setEmail(e.target.value)} 
-              placeholder = "Enter your email" 
-            />
-          </div>
-          <div className = "mb-3">
-            <label className = "form-label">Password</label>
-            <input 
-              type = "password" 
-              className = "form-control" 
-              value = {password} 
-              onChange = {(e) => setPassword(e.target.value)} 
-              placeholder = "Enter your password" 
-            />
-          </div>
-          <button type = "submit" className = "btn btn-primary w-100">Login</button>
-          <p className = "text-center my-2">OR</p>
-          <button type = "button" className = "btn btn-danger w-100" onClick = {HandleGoogleLogin}>
-            Login with Google
-          </button>
-          {loginError && <p className = "text-danger mt-2">{loginError}</p>}
-          {successMessage && <p className = "text-success mt-2">{successMessage}</p>}
-        </form>
-      </div>
+    <div>
+      <form onSubmit={HandleLogin}>
+        <input 
+          type="email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          placeholder="Enter your email" 
+        />
+        <input 
+          type="password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          placeholder="Enter your password" 
+        />
+        <button type="submit">Login</button>
+
+        <p>OR</p>
+
+        <button type="button" onClick={HandleGoogleLogin}>
+          Login with Google
+        </button>
+
+        {loginError && <p style={{ color: "red" }}>{loginError}</p>}
+        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
+      </form>
     </div>
   );
 }
