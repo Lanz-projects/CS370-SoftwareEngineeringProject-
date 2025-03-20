@@ -1,38 +1,46 @@
 require('dotenv').config();
 const express = require('express');
+const connectDB = require('./mongoConfig'); 
 const cors = require('cors');
-const connectDB = require('./mongoConfig'); // Import MongoDB connection function
+const admin = require('firebase-admin');
+const userRoutes = require('./routes/user');
+const userAgreementRoutes = require('./routes/userAgreement');
+const setupUserExtraInfoRoutes = require('./routes/setupUserExtraInfo');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Init Firebase Admin SDK
+const serviceAccount = require('./firebase-adminsdk.json'); // Download your Firebase service account JSON
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
+
 // Connect to MongoDB
 connectDB();
 
+// Cors Options
+const corsOptions = {
+    origin: "http://localhost:5173", 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, 
+  };
+
 // Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// CORS Config
-if (process.env.NODE_ENV === 'production') {
-  // In production, specify your frontend domain
-  app.use(cors({
-    origin: 'https://domain.com',  // Replace with your production frontend URL
-    credentials: true,
-  }));
-  //console.log("Production");
-} else {
-  // In development, allow requests from Vite's dev server (port 5173)
-  app.use(cors({
-    origin: 'http://localhost:5173',  // Vite dev server URL
-    credentials: true,               // Allow sending cookies if needed
-  }));
-  //console.log("Development");
-}
+// Use Routes
+app.use(userRoutes);
+app.use(userAgreementRoutes);
+app.use(setupUserExtraInfoRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
   res.send('Hello, MongoDB is connected!');
 });
+
 
 // Start Server
 app.listen(PORT, () => {

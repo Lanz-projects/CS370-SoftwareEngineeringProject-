@@ -3,7 +3,7 @@ import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import RequestRide from "../components/RequestRide";
 import PostRideListing from "../components/PostRideListing";
-
+import Navigationbar from "../components/Navigationbar";
 const containerStyle = {
   width: "100%",
   height: "100%",
@@ -43,6 +43,7 @@ const RideListing = () => {
 
   return (
     <div>
+      <Navigationbar></Navigationbar>
       <div className = "container-fluid d-flex vh-100 p-0">
         {/* Map Section (70%) */}
         <div className = "col-lg-8 col-md-7 p-0">
@@ -54,16 +55,16 @@ const RideListing = () => {
           {/* Buttons for Request a Ride and Post a Ride Listing */}
           <div className = "d-flex justify-content-between mb-4">
             <button 
-              className = "btn btn-light text-purple rounded-pill flex-grow-1 me-2" 
+              className = "btn btn-light text-white rounded-pill flex-grow-1 me-2" 
               onClick = {() => setShowRequestRideModal(true)}
-              style = {{ backgroundColor: 'white', color: '#510b76', border: 'none' }}
+              style = {{ backgroundColor: 'black', color: '#510b76', border: 'none' }}
             >
               Request a Ride
             </button>
             <button 
-              className = "btn btn-light text-purple rounded-pill flex-grow-1 ms-2" 
+              className = "btn btn-light text-white rounded-pill flex-grow-1 ms-2" 
               onClick = {() => setShowPostRideListingModal(true)}
-              style = {{ backgroundColor: 'white', color: '#510b76', border: 'none' }}
+              style = {{ backgroundColor: 'black', color: '#510b76', border: 'none' }}
             >
               Post a Ride Listing
             </button>

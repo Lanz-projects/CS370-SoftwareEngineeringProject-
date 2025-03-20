@@ -1,7 +1,10 @@
-function Home() {
-  return(
+import Navigationbar from "../components/Navigationbar"
+import HomePageLayout from "../components/HomePageLayout"
+function Home (){
+  return( 
     <div>
-      <h1>This is the Home Page</h1>
+      <Navigationbar></Navigationbar>
+      <HomePageLayout></HomePageLayout>
     </div>
   );
 }

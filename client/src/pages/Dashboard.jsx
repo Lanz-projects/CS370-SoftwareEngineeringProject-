@@ -1,7 +1,10 @@
+import Navigationbar from "../components/Navigationbar";
+import DashboardLayout from "../components/DashboardLayout";
 function Dashboard() {
   return(
     <div>
-      <h1>This is the Dashboard page</h1>
+      <Navigationbar></Navigationbar>
+      <DashboardLayout></DashboardLayout>
     </div>
   );
 }
