@@ -3,7 +3,7 @@ import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import RequestRide from "../components/RequestRide";
 import PostRideListing from "../components/PostRideListing";
-
+import Navigationbar from "../components/Navigationbar";
 const containerStyle = {
   width: "100%",
   height: "100%",
@@ -43,6 +43,7 @@ const RideListing = () => {
 
   return (
     <div>
+      <Navigationbar></Navigationbar>
       <div className = "container-fluid d-flex vh-100 p-0">
         {/* Map Section (70%) */}
         <div className = "col-lg-8 col-md-7 p-0">

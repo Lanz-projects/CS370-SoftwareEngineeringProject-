@@ -131,9 +131,21 @@ function UserExtraInfoInput() {
             type="text"
             className="form-control"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => {
+              
+              if (contactType === "phone") {
+                // Allow only numbers
+                const onlyNumbers = e.target.value.replace(/\D/g, "");
+                setValue(onlyNumbers);
+              } else {
+                setValue(e.target.value);
+              }
+            }}
             id="contactval"
             autoComplete="off"
+            maxLength={contactType === "phone" ? 16 : undefined}
+            pattern={contactType === "phone" ? "[0-9]*" : undefined}
+            placeholder={contactType === "phone" ? "Enter phone number" : "Enter contact info"}
           />
         </div>
 

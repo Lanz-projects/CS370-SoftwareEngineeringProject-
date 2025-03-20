@@ -14,7 +14,7 @@ import UserExtraInfoForm from './pages/UserExtraInfoForm'
 function App() {
   return (
     <>
-      <Navigationbar /> {/* Ensure the navbar is always visible */}
+    { /*Handles All Page Routing */ }
       <Routes>
         <Route path='/' element={<Home />}/>
         <Route path='/signup' element={<Signup />}/>
