@@ -62,28 +62,6 @@ function Login() {
       <div className = {`card p-4 shadow-lg ${styles.cardContainer}`}>
         <h2 className = "text-center mb-4">Login</h2>
         <form onSubmit = {HandleLogin}>
-          <div className = "mb-3">
-            <label className = "form-label">Email</label>
-            <input 
-              type = "email" 
-              className = "form-control" 
-              value = {email} 
-              onChange = {(e) => setEmail(e.target.value)} 
-              placeholder = "Enter your email" 
-            />
-          </div>
-          <div className = "mb-3">
-            <label className = "form-label">Password</label>
-            <input 
-              type = "password" 
-              className = "form-control" 
-              value = {password} 
-              onChange = {(e) => setPassword(e.target.value)} 
-              placeholder = "Enter your password" 
-            />
-          </div>
-          <button type = "submit" className = "btn btn-primary w-100">Login</button>
-          <p className = "text-center my-2">OR</p>
           <button type = "button" className = "btn btn-danger w-100" onClick = {HandleGoogleLogin}>
             Login with Google
           </button>

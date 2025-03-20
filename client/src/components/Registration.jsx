@@ -106,34 +106,6 @@ function Registration() {
       <div className={`card p-4 shadow-lg ${styles.cardContainer}`}>
         <h2 className="text-center mb-4">Sign Up</h2>
         <form onSubmit={HandleSignup}>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input 
-              type="email" 
-              className="form-control" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              placeholder="Enter your email" 
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input 
-              type="password" 
-              className="form-control" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Enter your password" 
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="btn btn-primary w-100"
-            disabled={isProcessing}
-          >
-            Sign Up
-          </button>
-          <p className="text-center my-2">OR</p>
           <button 
             type="button" 
             className="btn btn-danger w-100 mt-2"
@@ -151,11 +123,7 @@ function Registration() {
           <div><strong>Note:</strong> 
             <ul>
               <li>
-                If you sign up using the email/password method and then sign up with Google using the same email, your accounts will be linked. 
-                You will only be able to log in with Google after linking the accounts.
-              </li>
-              <li>
-                You can only use ~@truman.edu when signing up.
+                To preserve the accessibility and security of this application, the signup process is limited to only ~@truman.edu emails. Please sign up using your truman email to access this application.
               </li>
             </ul>
             </div>
