@@ -26,6 +26,11 @@
   background-color: #ffffff !important; /* White icon for the toggle button */
 }
 
+.burgerIcon {
+  background-color: white !important; /* Changes button background */
+}
+
+
 /* Desktop Styles: Links laid out horizontally */
 @media (min-width: 992px) {
   .customNavbar .navbar-nav {
