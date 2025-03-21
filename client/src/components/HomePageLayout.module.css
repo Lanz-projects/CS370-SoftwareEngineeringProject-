@@ -1,0 +1,37 @@
+/* Home.module.css */
+.homeContainer {
+  margin-top: 50px;
+}
+
+.infoCard, .solutionCard {
+  background-color: #f8f9fa; 
+  border: none;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cardTitle {
+  font-size: 2rem;
+  color: #6f42c1; 
+  font-weight: bold;
+}
+
+.cardText {
+  color: #495057; 
+  font-size: 1.1rem;
+}
+
+.getStartedButton {
+  background-color: #6f42c1; 
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  margin-top: 20px;
+}
+
+.getStartedButton:hover {
+  background-color: #563d7c; 
+}
