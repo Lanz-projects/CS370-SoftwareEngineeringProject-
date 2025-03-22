@@ -51,20 +51,20 @@ const RideListing = () => {
         </div>
 
         {/* Ride Listings Section (30%) */}
-        <div className = "col-lg-4 col-md-5 bg-dark text-white p-4 rounded-3">
+        <div className = "col-lg-4 col-md-5 bg-white text-black p-4 rounded-3">
           {/* Buttons for Request a Ride and Post a Ride Listing */}
           <div className = "d-flex justify-content-between mb-4">
             <button 
-              className = "btn btn-light text-purple rounded-pill flex-grow-1 me-2" 
+              className = "btn btn-light text-white rounded-pill flex-grow-1 me-2" 
               onClick = {() => setShowRequestRideModal(true)}
-              style = {{ backgroundColor: 'white', color: '#510b76', border: 'none' }}
+              style = {{ backgroundColor: 'black', color: '#510b76', border: 'none' }}
             >
               Request a Ride
             </button>
             <button 
-              className = "btn btn-light text-purple rounded-pill flex-grow-1 ms-2" 
+              className = "btn btn-light text-white rounded-pill flex-grow-1 ms-2" 
               onClick = {() => setShowPostRideListingModal(true)}
-              style = {{ backgroundColor: 'white', color: '#510b76', border: 'none' }}
+              style = {{ backgroundColor: 'black', color: '#510b76', border: 'none' }}
             >
               Post a Ride Listing
             </button>

@@ -1,8 +1,6 @@
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { app } from "../firebase";
-import styles from "./loginFunc.module.css"; // Import custom styles
+import { app } from "../firebase.js";
 
 function Login() {
   const [loginError, setLoginError] = useState("");
@@ -30,7 +28,7 @@ function Login() {
       const emailDomain = user.email.split("@")[1];
 
       if (emailDomain !== "truman.edu") {
-        await signOut(auth);
+        await signOut(auth); // Sign out if not allowed
         setLoginError("Only @truman.edu emails are allowed.");
         return;
       }
