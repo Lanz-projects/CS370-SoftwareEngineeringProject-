@@ -1,48 +1,63 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import UserAgreementPopup from "../components/UserAgreement"
+import UserAgreementPopup from "../components/UserAgreement";
 import RedirectUserInfoPopup from "./RedirectUserInfoPopup";
 
-function DashboardLayout(){
-  const [showAgreement, setShowAgreement] = useState(false); // This checks the state whether to show the User Agreement
-  const [showNextPopup, setShowNextPopup] = useState(false); // This checks whether the next popup shows up
+function DashboardLayout() {
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [showNextPopup, setShowNextPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const abortController = new AbortController(); // Prevent async issues
+    const signal = abortController.signal;
+
     const fetchUserData = async () => {
       try {
-        // Checks if the user is already logged in by checking if the token is in local storage
         const token = localStorage.getItem("token");
         if (!token) {
           navigate("/login");
           return;
         }
 
-        // Checks to see if the user has already accepted the User Agreement
-        // The user agreement is a boolean that is stored in User collection in the database
         const response = await fetch("http://localhost:5000/api/user", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
+          signal, // Attach the abort signal
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
         const data = await response.json();
         if (data.acceptedUserAgreement === false) {
           setShowAgreement(true);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        if (error.name !== "AbortError") {
+          console.error("Error fetching user data:", error);
+        }
       }
     };
 
     fetchUserData();
+
+    return () => {
+      abortController.abort(); // Cleanup function to cancel request if component unmounts
+    };
   }, [navigate]);
 
   const handleAcceptAgreement = async () => {
     try {
       const token = localStorage.getItem("token");
-      
-      // Submits if the user has accepeted the user agreement
-      await fetch("http://localhost:5000/api/user/agreement", {
+      if (!token) {
+        alert("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/user/agreement", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -51,16 +66,20 @@ function DashboardLayout(){
         body: JSON.stringify({ acceptedUserAgreement: true }),
       });
 
-      setShowAgreement(false); // Closes the popup  
-      setShowNextPopup(true); // Opens the next popup
+      if (!response.ok) {
+        throw new Error(`Failed to update agreement: ${response.statusText}`);
+      }
+
+      setShowAgreement(false);
+      setShowNextPopup(true);
     } catch (error) {
       console.error("Error updating agreement status:", error);
     }
   };
 
   const handleGoToNextPage = () => {
-    setShowNextPopup(false);  
-    navigate("/extra-userinfo-form");  
+    setShowNextPopup(false);
+    navigate("/extra-userinfo-form");
   };
 
   const handleDoItLater = () => {

@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Init Firebase Admin SDK
-const serviceAccount = require('./firebase-adminsdk.json'); // Download your Firebase service account JSON
+const serviceAccount = require('./firebase-adminsdk.json'); 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
@@ -19,17 +19,29 @@ admin.initializeApp({
 // Connect to MongoDB
 connectDB();
 
-// Cors Options
+// CORS Options
 const corsOptions = {
-    origin: "http://localhost:5173", 
+    origin: ["http://localhost:5173", "https://accounts.google.com"], 
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true, 
-  };
+};
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Set Headers to Fix Firebase Authentication Issues
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow all origins
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
 
 // Use Routes
 app.use(userRoutes);
@@ -38,11 +50,10 @@ app.use(setupUserExtraInfoRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
-  res.send('Hello, MongoDB is connected!');
+    res.send('Hello, MongoDB is connected!');
 });
-
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });

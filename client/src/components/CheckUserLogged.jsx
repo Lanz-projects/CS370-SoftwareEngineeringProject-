@@ -3,17 +3,26 @@ import { getAuth } from "firebase/auth";
 import { app } from "../firebase";
 
 function CheckUserLogged() {
-  const [user, setUser] = useState(null); // Used to track user authentication status
-
+  // Undefined to differentiate between loading and null (not logged in)
+  const [user, setUser] = useState(undefined); 
+  
   useEffect(() => {
     const auth = getAuth(app);
 
     const check = auth.onAuthStateChanged(async (currentUser) => {
+      if (!currentUser) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("tokenExpiration");
+        setUser(null);
+        return;
+      }
+
       const tokenExpiration = localStorage.getItem("tokenExpiration");
       const currentTime = new Date().getTime();
 
       // Check if the token is expired
       // If it is expired remove it
+
       if (tokenExpiration && currentTime > tokenExpiration) {
         localStorage.removeItem("token");
         localStorage.removeItem("tokenExpiration");
@@ -21,24 +30,15 @@ function CheckUserLogged() {
         return;
       }
 
-      if (currentUser) {
-        // If user is logged in, get the ID token
-        const token = await currentUser.getIdToken(); // Get Firebase ID token
-        // Store token and expiration time in localStorage
-        localStorage.setItem("token", token);
-        const expirationTime = new Date().getTime() + 3600000; // Token expires in 1 hour
-        localStorage.setItem("tokenExpiration", expirationTime);
+      // Fetch and store the token if valid
+      const token = await currentUser.getIdToken();
+      const expirationTime = currentTime + 3600000; // 1 hour expiration
+      localStorage.setItem("token", token);
+      localStorage.setItem("tokenExpiration", expirationTime);
 
-        setUser(currentUser); 
-      } else {
-        // If no user is logged in, clear token from localStorage
-        localStorage.removeItem("token");
-        localStorage.removeItem("tokenExpiration");
-        setUser(null); 
-      }
+      setUser(currentUser);
     });
 
-    // Stop the listener
     return () => check();
   }, []);
 

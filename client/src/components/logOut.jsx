@@ -7,9 +7,16 @@ export const handleLogout = async (navigate) => {
   try {
     await signOut(auth);
     console.log("User signed out successfully");
-    setTimeout(() => navigate("/"), 1000); // Redirect after 1 second
+
     alert("Logged Out");
+
+    if (typeof navigate === "function") {
+      navigate("/"); 
+    } else {
+      console.error("Navigate function is missing or invalid.");
+    }
   } catch (error) {
     console.error("Logout error:", error);
+    alert("Failed to log out. Please try again.");
   }
 };
