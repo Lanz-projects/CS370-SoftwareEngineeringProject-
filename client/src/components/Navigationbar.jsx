@@ -14,8 +14,9 @@ function Navigationbar() {
         <Navbar.Brand as = {Link} to = "/" className = {styles.customBrand}>
           Truman Ride-Share
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls = "basic-navbar-nav" />
+        <Navbar.Toggle aria-controls = "basic-navbar-nav" className={styles.burgerIcon}/>
         <Navbar.Collapse id = "basic-navbar-nav">
+
           <Nav className = {styles.customeNavLinkContainer}>
             <Nav.Link as = {Link} to = "/" className = {styles.customNavLink}>Homepage</Nav.Link>
 
