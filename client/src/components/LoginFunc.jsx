@@ -2,6 +2,7 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/
 import { useState } from "react";
 import { app } from "../firebase.js";
 import { useNavigate } from "react-router-dom";
+import styles from './loginFunc.module.css'
 
 function Login() {
   const [loginError, setLoginError] = useState("");

@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import RideListing from './pages/RideListing'
 import TermsAndService from './pages/termsAndService'
 import UserExtraInfoForm from './pages/UserExtraInfoForm'
+import VehicleForm from './pages/VehicleForm'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/ridelistings' element={<RideListing />}/>
         <Route path='/terms-and-conditions' element={<TermsAndService />}/>
         <Route path='/extra-userinfo-form' element={<UserExtraInfoForm />}/>
+        <Route path='/vehicleform' element={<VehicleForm />}/>
       </Routes>
     </>
   );

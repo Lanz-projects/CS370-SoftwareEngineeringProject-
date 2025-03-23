@@ -20,7 +20,7 @@ router.post("/api/update-user-info", verifyToken, async (req, res) => {
     // Update the user's name and contact info
     user.name = name;
     user.contactInfo = contactInfos;  // Replace the old contact info with the new array
-
+    user.completedUserProfile = true;
     // Save the updated user document
     await user.save();
 

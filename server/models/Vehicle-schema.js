@@ -22,11 +22,6 @@ const VehicleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  seatAmt: {
-    type: Number,
-    required: true,
-    min: 1 
-  }
 }, { collection: 'Vehicles' });
 
 module.exports = mongoose.model('Vehicle', VehicleSchema);

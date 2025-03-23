@@ -6,6 +6,8 @@ const admin = require('firebase-admin');
 const userRoutes = require('./routes/user');
 const userAgreementRoutes = require('./routes/userAgreement');
 const setupUserExtraInfoRoutes = require('./routes/setupUserExtraInfo');
+const vehicleFormRoutes = require('./routes/vehicleForm');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +49,7 @@ app.use((req, res, next) => {
 app.use(userRoutes);
 app.use(userAgreementRoutes);
 app.use(setupUserExtraInfoRoutes);
+app.use(vehicleFormRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
