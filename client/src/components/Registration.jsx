@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import styles from "./registration.module.css";
 
 function Registration() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [signUpError, setSignUpError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   // This is used to stop the user from clicking signup button more than once until
@@ -16,46 +14,6 @@ function Registration() {
   const navigate = useNavigate();
   const auth = getAuth(app);
   const googleProvider = new GoogleAuthProvider();
-
-  // Validate email format
-  const isValidEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@truman\.edu$/;
-    return emailRegex.test(email);
-  };
-
-  // Validate password length
-  const isValidPassword = (password) => password.length >= 8;
-
-  const HandleSignup = async (e) => {
-    e.preventDefault();
-    // Check whether email or password is valid. 
-    // This is an extra check, but firebase already handles this
-    if (!isValidEmail(email) || !isValidPassword(password)) {
-        setSignUpError("Invalid email or password.");
-        return;
-    }
-
-    setIsProcessing(true);
-
-    try { 
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const token = await userCredential.user.getIdToken();
-
-        // Send token to backend
-        await fetch('http://localhost:5000/api/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, email }),
-        });
-
-        setSuccessMessage("Signup successful!");
-        setTimeout(() => navigate('/dashboard'), 1000) // Redirect after 1 second
-    } catch (error) {
-        setSignUpError(error.message);
-    } finally {
-        setIsProcessing(false);
-    }
-  };
 
   const HandleGoogleSignup = async () => {
     setIsProcessing(true);
@@ -105,7 +63,7 @@ function Registration() {
     <div className={`container d-flex justify-content-center align-items-center vh-100`}>
       <div className={`card p-4 shadow-lg ${styles.cardContainer}`}>
         <h2 className="text-center mb-4">Sign Up</h2>
-        <form onSubmit={HandleSignup}>
+        <form>
           <button 
             type="button" 
             className="btn btn-danger w-100 mt-2"
@@ -117,7 +75,6 @@ function Registration() {
           {signUpError && <p className="text-danger mt-2">{signUpError}</p>}
           {successMessage && <p className="text-success mt-2">{successMessage}</p>}
         </form>
-
         {/* Information when signing up */}
         <div className="mt-4">
           <div><strong>Note:</strong> 
