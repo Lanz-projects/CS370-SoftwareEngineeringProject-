@@ -27,6 +27,9 @@ function Registration() {
       // Checks the email domain
       if (emailDomain !== "truman.edu") {
         await auth.signOut();
+        // If the email domain is wrong, firebase still saves it
+        // This line deletes the user after firebase stores it.
+        await result.user.delete();
         setSignUpError("Only @truman.edu email domain is allowed.");
         return;
       }
