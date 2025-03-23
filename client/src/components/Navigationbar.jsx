@@ -29,8 +29,6 @@ function Navigationbar() {
                 <Nav.Link as = {Link} to = "/profile" className = {styles.customNavLink}>Profile</Nav.Link>
                 <Nav.Link as = {Link} to = "/dashboard" className = {styles.customNavLink}>Dashboard</Nav.Link>
                 <Nav.Link as = {Link} to = "/ridelistings" className = {styles.customNavLink}>Ride Listings</Nav.Link>
-                <Nav.Link as = {Link} to = "/settings" className = {styles.customNavLink}>Settings</Nav.Link>
-                <Nav.Link as = {Link} to = "/notifications" className = {styles.customNavLink}>Notifications</Nav.Link>
                 <Nav.Link onClick = {() => handleLogout(navigate)} className = {styles.customNavLink}>Logout</Nav.Link>
               </>
             )}
