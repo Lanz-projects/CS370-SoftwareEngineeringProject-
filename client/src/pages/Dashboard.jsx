@@ -9,6 +9,7 @@ const Dashboard = () => {
   return (
     <div>
       <Navigationbar />
+      <DashboardLayout />
       <div className="container-fluid d-flex vh-100 p-0">
         {/* Recent Listings Section (50%) */}
         <div className="col-lg-6 col-md-6 bg-light text-black p-4 rounded-3 text-center">

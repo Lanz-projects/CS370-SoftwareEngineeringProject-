@@ -6,8 +6,6 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Dashboard from './pages/Dashboard'
 import RideListing from './pages/RideListing'
-import Settings from './pages/Settings'
-import Notfications from './pages/Notifications'
 import TermsAndService from './pages/termsAndService'
 import UserExtraInfoForm from './pages/UserExtraInfoForm'
 
@@ -22,8 +20,6 @@ function App() {
         <Route path='/profile' element={<Profile />}/>
         <Route path='/dashboard' element={<Dashboard />}/>
         <Route path='/ridelistings' element={<RideListing />}/>
-        <Route path='/settings' element={<Settings />}/>
-        <Route path='/notifications' element={<Notfications />}/>
         <Route path='/terms-and-conditions' element={<TermsAndService />}/>
         <Route path='/extra-userinfo-form' element={<UserExtraInfoForm />}/>
       </Routes>
