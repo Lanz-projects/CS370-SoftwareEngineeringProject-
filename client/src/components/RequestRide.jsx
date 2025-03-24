@@ -2,31 +2,60 @@ import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const RequestRide = ({ show, handleClose }) => {
-  const [destination, setDestination] = useState("");
+  const [userId, setUserId] = useState("");
+  const [location, setLocation] = useState("");
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [notes, setNotes] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Requesting a ride to ${destination}`);
+    alert(`Requesting a ride with User ID: ${userId}, Location: ${location}, Arrival Date: ${arrivalDate}, Notes: ${notes}`);
     handleClose();
   };
 
   return (
-    <Modal show = {show} onHide = {handleClose}>
+    <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
         <Modal.Title>Request a Ride</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form onSubmit = {handleSubmit}>
-          <Form.Group className = "mb-3">
-            <Form.Label>Destination</Form.Label>
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3">
+            <Form.Label>User ID</Form.Label>
             <Form.Control
-              type = "text"
-              placeholder = "Enter destination"
-              value = {destination}
-              onChange = {(e) => setDestination(e.target.value)}
+              type="text"
+              placeholder="Enter user ID"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
             />
           </Form.Group>
-          <Button type = "submit" variant = "primary">
+          <Form.Group className="mb-3">
+            <Form.Label>Destination</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter destination"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Arrival Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={arrivalDate}
+              onChange={(e) => setArrivalDate(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Notes</Form.Label>
+            <Form.Control
+              as="textarea"
+              placeholder="Enter notes (this may include willingness to split gas costs, etc.)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </Form.Group>
+          <Button type="submit" variant="primary">
             Submit
           </Button>
         </Form>
