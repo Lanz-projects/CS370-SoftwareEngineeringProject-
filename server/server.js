@@ -6,6 +6,10 @@ const admin = require('firebase-admin');
 const userRoutes = require('./routes/user');
 const userAgreementRoutes = require('./routes/userAgreement');
 const setupUserExtraInfoRoutes = require('./routes/setupUserExtraInfo');
+const offeringRoutes = require('./routes/offering');
+const requestRoutes = require('./routes/request');
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +39,8 @@ app.use(express.json());
 app.use(userRoutes);
 app.use(userAgreementRoutes);
 app.use(setupUserExtraInfoRoutes);
+app.use(offeringRoutes);
+app.use(requestRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
