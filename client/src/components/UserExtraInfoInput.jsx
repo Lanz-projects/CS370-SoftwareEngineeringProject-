@@ -8,8 +8,9 @@ function UserExtraInfoInput() {
   const [contactType, setContactType] = useState("phone");
   const [platform, setPlatform] = useState("");
   const [value, setValue] = useState("");
-  const [nameError, setNameError] = useState(""); // For name validation error
-  const [emailError, setEmailError] = useState(""); // For email validation error
+  const [nameError, setNameError] = useState(""); 
+  const [emailError, setEmailError] = useState(""); 
+
   const user = CheckUserLogged();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -20,14 +21,12 @@ function UserExtraInfoInput() {
     }
   }, [user, navigate]);
 
-  // Wait for Firebase auth to load
   if (user === undefined) {
     return <div>Loading...</div>;
   }
 
-  // Name validation: only letters and max 50 characters
   const validateName = (name) => {
-    const regex = /^[a-zA-Z\s]*$/; // Only allows letters and spaces
+    const regex = /^[a-zA-Z\s]*$/; 
     if (!name.match(regex)) {
       setNameError("Name must only contain letters and spaces.");
       return false;
@@ -36,18 +35,17 @@ function UserExtraInfoInput() {
       setNameError("Name cannot exceed 50 characters.");
       return false;
     }
-    setNameError(""); // Clear error if valid
+    setNameError(""); 
     return true;
   };
 
-  // Email validation
   const validateEmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!email.match(regex)) {
       setEmailError("Please enter a valid email address.");
       return false;
     }
-    setEmailError(""); // Clear error if valid
+    setEmailError(""); 
     return true;
   };
 
@@ -57,19 +55,27 @@ function UserExtraInfoInput() {
       return;
     }
 
-    const newContactInfo = { type: contactType, value };
-    if (contactType === "social") {
-      newContactInfo.platform = platform;
+    if (contactType === "social" && !platform.trim()) {
+      alert("Please select a social platform.");
+      return;
     }
 
-    if (contactType === "email") {
-      if (!validateEmail(value)) return; // Check email validity before submitting
+    if (contactType === "email" && !validateEmail(value)) {
+      return; 
+    }
+
+    const newContactInfo = { type: contactType, value };
+
+    if (contactType === "social") {
+      newContactInfo.platform = platform;
+    } else {
+      delete newContactInfo.platform;
     }
 
     setContactInfos([...contactInfos, newContactInfo]);
     setContactType("phone");
     setValue("");
-    setPlatform("");
+    setPlatform(""); 
   };
 
   const handleDeleteContactInfo = (index) => {
@@ -85,10 +91,7 @@ function UserExtraInfoInput() {
       return;
     }
 
-    if (!validateName(name)) return; // Check name validity before submitting
-
-    // Async operation flag
-    let isMounted = true;
+    if (!validateName(name)) return; 
 
     try {
       const response = await fetch("http://localhost:5000/api/update-user-info", {
@@ -100,23 +103,17 @@ function UserExtraInfoInput() {
         body: JSON.stringify({ name, contactInfos }),
       });
 
-      if (isMounted) {
-        const data = await response.json();
-        if (response.ok) {
-          alert(data.message);
-          navigate('/profile');
-        } else {
-          alert("Error: " + data.error);
-        }
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+        navigate('/profile');
+      } else {
+        alert("Error: " + data.error);
       }
     } catch (error) {
       console.error("Error updating user info:", error);
       alert("Failed to update user info.");
     }
-
-    return () => {
-      isMounted = false; // Cleanup flag on unmount
-    };
   };
 
   return (
@@ -134,7 +131,7 @@ function UserExtraInfoInput() {
             id="username"
             autoComplete="off"
           />
-          {nameError && <div className="text-danger">{nameError}</div>} {/* Show name error */}
+          {nameError && <div className="text-danger">{nameError}</div>} 
         </div>
 
         <div className="mb-3">
@@ -161,6 +158,7 @@ function UserExtraInfoInput() {
               onChange={(e) => setPlatform(e.target.value)}
               id="socialPlatform"
             >
+              <option value="">Select a Platform</option> {/* Default empty selection */}
               {["Twitter", "Instagram", "Snapchat", "TikTok", "GroupMe",
                 "Discord", "WhatsApp", "Messenger", "Facebook", "Other"].map((plat) => (
                 <option key={plat} value={plat}>{plat}</option>
@@ -181,7 +179,7 @@ function UserExtraInfoInput() {
             maxLength={contactType === "phone" ? 16 : undefined}
             placeholder={contactType === "phone" ? "Enter phone number" : "Enter contact info"}
           />
-          {emailError && <div className="text-danger">{emailError}</div>} {/* Show email error */}
+          {emailError && <div className="text-danger">{emailError}</div>} 
         </div>
 
         <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>

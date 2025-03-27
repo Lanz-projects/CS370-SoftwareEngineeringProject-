@@ -1,4 +1,4 @@
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, fetchSignInMethodsForEmail } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { useState } from "react";
 import { app } from "../firebase.js";
 import { useNavigate } from "react-router-dom";
@@ -30,30 +30,38 @@ function Login() {
       const emailDomain = user.email.split("@")[1];
 
       if (emailDomain !== "truman.edu") {
-        await signOut(auth); // Sign out if not allowed
+        await signOut(auth);
         await result.user.delete();
         setLoginError("Only @truman.edu emails are allowed.");
         return;
       }
 
-      // Check if the user is already signed up
-      const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
-      if (signInMethods.length === 0) {
+      // Check if user exists in MongoDB
+      const response = await fetch("http://localhost:5000/api/check-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 404) {
+        await signOut(auth);
         await result.user.delete();
-        setLoginError("No account found for this email. Please go to the Sign Up page.");
+        setLoginError("User does not exist. Please sign up first.");
         return;
       }
 
-      setSuccessMessage("Google Login successful! Redirecting...");
+      if (!response.ok) {
+        throw new Error(data.error || "Error checking user existence.");
+      }
+
+      setSuccessMessage("Login successful! Redirecting...");
       navigate("/dashboard");
     } catch (error) {
-      if (error.code === "auth/popup-closed-by-user") {
-        setLoginError("Login cancelled. Please try again.");
-      } else if (error.code === "auth/network-request-failed") {
-        setLoginError("Network error. Check your connection and try again.");
-      } else {
-        setLoginError(error.message || "An unexpected error occurred.");
-      }
+      setLoginError(error.message || "An unexpected error occurred.");
     } finally {
       setIsProcessing(false);
     }

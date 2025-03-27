@@ -34,4 +34,20 @@ router.post('/api/signup', async (req, res) => {
   }
 });
 
+router.post('/api/check-user', async (req, res) => {
+    const { email } = req.body;
+  
+    try {
+      const existingUser = await User.findOne({ email });
+  
+      if (!existingUser) {
+        return res.status(404).json({ error: "User does not exist." });
+      }
+  
+      res.status(200).json({ message: "User exists." });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Server error while checking user." });
+    }
+  });
 module.exports = router;
