@@ -1,8 +1,8 @@
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, fetchSignInMethodsForEmail } from "firebase/auth";
 import { useState } from "react";
 import { app } from "../firebase.js";
 import { useNavigate } from "react-router-dom";
-import styles from './loginFunc.module.css'
+import styles from './loginFunc.module.css';
 
 function Login() {
   const [loginError, setLoginError] = useState("");
@@ -31,7 +31,16 @@ function Login() {
 
       if (emailDomain !== "truman.edu") {
         await signOut(auth); // Sign out if not allowed
+        await result.user.delete();
         setLoginError("Only @truman.edu emails are allowed.");
+        return;
+      }
+
+      // Check if the user is already signed up
+      const signInMethods = await fetchSignInMethodsForEmail(auth, user.email);
+      if (signInMethods.length === 0) {
+        await result.user.delete();
+        setLoginError("No account found for this email. Please go to the Sign Up page.");
         return;
       }
 
