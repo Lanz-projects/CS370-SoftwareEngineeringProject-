@@ -83,4 +83,36 @@ router.delete('/api/delete-user', verifyToken, async (req, res) => {
   }
 });
 
+// Fetch user data
+router.get('/api/user', verifyToken, async (req, res) => {
+  const userId = req.user.uid; // Get user ID from the decoded token
+
+  try {
+    // Find the user by UID and populate the associated vehicle data
+    const user = await User.findOne({ uid: userId }).populate('vehicleid');
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Respond with the user data, including their vehicle and contact info
+    res.status(200).json({
+      user: {
+        uid: user.uid,
+        email: user.email,
+        name: user.name,
+        vehicle: user.vehicleid,
+        contactInfo: user.contactInfo,
+        completedUserProfile: user.completedUserProfile,
+        acceptedUserAgreement: user.acceptedUserAgreement,
+        createdAt: user.createdAt
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 module.exports = router;

@@ -7,6 +7,9 @@ const userRoutes = require('./routes/user');
 const userAgreementRoutes = require('./routes/userAgreement');
 const setupUserExtraInfoRoutes = require('./routes/setupUserExtraInfo');
 const vehicleFormRoutes = require('./routes/vehicleForm');
+const offeringRoutes = require('./routes/offering');
+const requestRoutes = require('./routes/request');
+
 
 
 const app = express();
@@ -50,6 +53,8 @@ app.use(userRoutes);
 app.use(userAgreementRoutes);
 app.use(setupUserExtraInfoRoutes);
 app.use(vehicleFormRoutes);
+app.use(offeringRoutes);
+app.use(requestRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

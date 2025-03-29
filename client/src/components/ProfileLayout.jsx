@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const ProfileLayout = () => {
-  const userInfo = {
-    name: 'Halma',
-    email: 'Ruthie@retire.edu',
-    phone: '123-456-7890',
-    vehicle: 'fusion',
-    bannerId: 'T01234567',
-  };
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`, // Include token
+          },
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          setUserInfo(data.user);
+        } else {
+          setError(data.error);
+        }
+      } catch (error) {
+        setError('Error fetching user data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const containerStyle = {
     maxWidth: '500px',
@@ -41,6 +63,14 @@ const ProfileLayout = () => {
     color: 'purple',
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div style={containerStyle}>
       <h2 style={titleStyle}>Your Profile</h2>
@@ -54,20 +84,34 @@ const ProfileLayout = () => {
         <div style={labelStyle}>Email</div>
         <div>{userInfo.email}</div>
       </div>
-
-      <div style={infoBoxStyle}>
-        <div style={labelStyle}>Phone Number</div>
-        <div>{userInfo.phone}</div>
-      </div>
-
+      
       <div style={infoBoxStyle}>
         <div style={labelStyle}>Vehicle Info</div>
-        <div>{userInfo.vehicle}</div>
+        <div>{userInfo.vehicle ? `${userInfo.vehicle.make} ${userInfo.vehicle.model}` : 'No vehicle assigned'}</div>
       </div>
 
       <div style={infoBoxStyle}>
-        <div style={labelStyle}>Truman Banner ID</div>
-        <div>{userInfo.bannerId}</div>
+        <div style={labelStyle}>Contact Info</div>
+        <div>
+          {userInfo.contactInfo.length > 0 ? userInfo.contactInfo.map(info => (
+            <div key={info.value}>{info.type}: {info.value}</div>
+          )) : 'No contact info available'}
+        </div>
+      </div>
+
+      <div style={infoBoxStyle}>
+        <div style={labelStyle}>Profile Completion</div>
+        <div>{userInfo.completedUserProfile ? 'Completed' : 'Incomplete'}</div>
+      </div>
+
+      <div style={infoBoxStyle}>
+        <div style={labelStyle}>Accepted User Agreement</div>
+        <div>{userInfo.acceptedUserAgreement ? 'Yes' : 'No'}</div>
+      </div>
+
+      <div style={infoBoxStyle}>
+        <div style={labelStyle}>Account Created On</div>
+        <div>{new Date(userInfo.createdAt).toLocaleDateString()}</div>
       </div>
     </div>
   );
