@@ -9,8 +9,8 @@ const setupUserExtraInfoRoutes = require('./routes/setupUserExtraInfo');
 const vehicleFormRoutes = require('./routes/vehicleForm');
 const offeringRoutes = require('./routes/offering');
 const requestRoutes = require('./routes/request');
-
-
+const allListingsRoutes = require('./routes/allListings');
+const eachListingsRoutes = require('./routes/eachListings');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,6 +55,9 @@ app.use(setupUserExtraInfoRoutes);
 app.use(vehicleFormRoutes);
 app.use(offeringRoutes);
 app.use(requestRoutes);
+app.use(allListingsRoutes);
+app.use(eachListingsRoutes);
+
 
 // Test Route
 app.get('/', (req, res) => {

@@ -9,6 +9,9 @@ import RideListing from './pages/RideListing'
 import TermsAndService from './pages/termsAndService'
 import UserExtraInfoForm from './pages/UserExtraInfoForm'
 import VehicleForm from './pages/VehicleForm'
+import UpdateUserProfile from './pages/UpdateUserProfile'
+import VehicleUpdateForm from './pages/VehicleUpdateForm'
+
 
 function App() {
   return (
@@ -24,6 +27,8 @@ function App() {
         <Route path='/terms-and-conditions' element={<TermsAndService />}/>
         <Route path='/extra-userinfo-form' element={<UserExtraInfoForm />}/>
         <Route path='/vehicleform' element={<VehicleForm />}/>
+        <Route path='/updateprofile' element={<UpdateUserProfile />}/>
+        <Route path='/updatevehicle' element={<VehicleUpdateForm />}/>
       </Routes>
     </>
   );

@@ -2,6 +2,15 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const offeringSchema = new Schema({
+    userid: {
+        type: String,
+        ref: 'User',  // Foreign key reference to User schema
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
     location: {
         type: {
             type: String,
@@ -19,7 +28,6 @@ const offeringSchema = new Schema({
     },
     vehicleid: {                              
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Vehicle', // Reference to the Vehicle collection
         required: true
     },
     notes: {

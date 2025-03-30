@@ -3,8 +3,12 @@ const Schema = mongoose.Schema;
 
 const requestSchema = new Schema({
     userid: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: 'User',  // Foreign key reference to User schema
+        required: true
+    },
+    name: {
+        type: String,
         required: true
     },
     location: {

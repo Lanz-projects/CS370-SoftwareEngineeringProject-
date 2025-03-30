@@ -33,7 +33,7 @@ function DashboardLayout() {
         }
 
         const data = await response.json();
-        if (data.acceptedUserAgreement === false) {
+        if (data.user?.acceptedUserAgreement === false) {
           setShowAgreement(true);
         }
       } catch (error) {
