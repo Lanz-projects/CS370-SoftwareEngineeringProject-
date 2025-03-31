@@ -18,13 +18,10 @@ const center = {
 
 const Map = () => {
   const mapRef = useRef(null);
-
-  // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
 
-  // Recenter the map on load
   const onLoad = useCallback((map) => {
     mapRef.current = map;
     map.setCenter(center);
@@ -44,30 +41,58 @@ const RideListingLayout = () => {
   const [showPostRideListingModal, setShowPostRideListingModal] = useState(false);
   const [offeringList, setOfferingList] = useState([]);
   const [requestList, setRequestList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch all offerings and requests on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/all-data", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("token")}`, // Assuming you have a token for authorization
-          },
-        });
-        const data = await response.json();
-        if (data) {
-          setOfferingList(data.offerings);
-          setRequestList(data.requests);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+  const fetchData = async () => {
+    try {
+      const response = await fetch("/api/all-data", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await response.json();
+      if (data) {
+        setOfferingList(data.offerings || []);
+        setRequestList(data.requests || []);
       }
-    };
+    } catch (error) {
+      setError(error.message);
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
+  }, []);
+
+  const handleNewRequest = (newRequest) => {
+    setRequestList(prev => [newRequest, ...prev]);
+  };
+
+  if (loading) {
+    return (
+      <div className="container-fluid d-flex vh-100 p-0">
+        <div className="d-flex justify-content-center align-items-center w-100">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container-fluid d-flex vh-100 p-0">
+        <div className="alert alert-danger w-100 m-3">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-fluid d-flex vh-100 p-0">
@@ -78,7 +103,6 @@ const RideListingLayout = () => {
 
       {/* Ride Listings Section (30%) */}
       <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3">
-        {/* Buttons for Request a Ride and Post a Ride Listing */}
         <div className="d-flex justify-content-between mb-4">
           <button
             className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
@@ -96,20 +120,25 @@ const RideListingLayout = () => {
           </button>
         </div>
 
-        {/* Modals for Request a Ride and Post a Ride Listing */}
-        <RequestRide show={showRequestRideModal} handleClose={() => setShowRequestRideModal(false)} />
-        <PostRideListing show={showPostRideListingModal} handleClose={() => setShowPostRideListingModal(false)} />
+        <RequestRide 
+          show={showRequestRideModal} 
+          handleClose={() => setShowRequestRideModal(false)}
+          onRequestSubmit={handleNewRequest}
+        />
+        <PostRideListing 
+          show={showPostRideListingModal} 
+          handleClose={() => setShowPostRideListingModal(false)} 
+        />
 
         <h3 className="mb-4">Ride Listings</h3>
 
-        {/* Displaying Offerings and Requests */}
         <div>
           {offeringList.length === 0 && requestList.length === 0 ? (
             <p>No ride listings available.</p>
           ) : (
             <div>
               {offeringList.length > 0 && (
-                <div>
+                <div className="mb-4">
                   <h5>Offering Listings</h5>
                   {offeringList.map((offering) => (
                     <OfferingCard key={offering._id} offering={offering} />
