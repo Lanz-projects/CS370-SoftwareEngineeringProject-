@@ -217,7 +217,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
                   setIsLocationVerified(false);
                   setCoordinates(null);
                 }}
-                placeholder="Enter address"
+                placeholder="Enter address: Kirksville, Missouri"
                 isInvalid={!!errors.destination || !!errors.coordinates}
                 required
               />
