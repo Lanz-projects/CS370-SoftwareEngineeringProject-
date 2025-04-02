@@ -1,50 +1,72 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAgreementPopup from "../components/UserAgreement";
 import RedirectUserInfoPopup from "./RedirectUserInfoPopup";
+import OfferingCard from "./OfferingCard"; // Import OfferingCard component
+import RequestCard from "./RequestCard"; // Import RequestCard component
 
 function DashboardLayout() {
   const [recentPosts, setRecentPosts] = useState([]); // State to hold recent posts
+  const [offeringList, setOfferingList] = useState([]); // State to hold offerings
+  const [requestList, setRequestList] = useState([]); // State to hold requests
   const [showAgreement, setShowAgreement] = useState(false);
   const [showNextPopup, setShowNextPopup] = useState(false);
+  const [loading, setLoading] = useState(true); // State for loading state
+  const [error, setError] = useState(null); // State to capture any errors
+  const [viewOption, setViewOption] = useState("both"); // State to toggle view between offerings and requests
   const navigate = useNavigate();
 
+  // Fetching user data and all data (offerings and requests)
   useEffect(() => {
     const abortController = new AbortController(); // Prevent async issues
     const signal = abortController.signal;
-
-    const fetchUserData = async () => {
+  
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
           navigate("/login");
           return;
         }
-
-        const response = await fetch("http://localhost:5000/api/user", {
+  
+        const response = await fetch("http://localhost:5000/api/recent-data", {
           method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           signal, // Attach the abort signal
         });
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
+  
         const data = await response.json();
-        if (data.user?.acceptedUserAgreement === false) {
+        setOfferingList(data.offerings || []);
+        setRequestList(data.requests || []);
+  
+        // Check if user has accepted the agreement
+        const userResponse = await fetch("http://localhost:5000/api/user", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const userData = await userResponse.json();
+        if (userData.user?.acceptedUserAgreement === false) {
           setShowAgreement(true);
         }
       } catch (error) {
         if (error.name !== "AbortError") {
-          console.error("Error fetching user data:", error);
+          setError(error.message);
+          console.error("Error fetching data:", error);
         }
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchUserData();
-
+  
+    fetchData();
+  
     return () => {
       abortController.abort(); // Cleanup function to cancel request if component unmounts
     };
@@ -61,7 +83,7 @@ function DashboardLayout() {
 
       const response = await fetch("http://localhost:5000/api/user/agreement", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
@@ -88,29 +110,77 @@ function DashboardLayout() {
     setShowNextPopup(false);
   };
 
-
-
+  const handleViewOptionChange = (option) => {
+    setViewOption(option); // Change the view option based on the user's selection
+  };
 
   return (
     <div className="container-fluid d-flex vh-100 p-0">
       {/* Recent Listings Section (50%) */}
-      <div className="col-lg-6 col-md-6 bg-light text-black p-4 rounded-3 text-center">
+      <div className="col-lg-6 col-md-6 bg-light text-black p-4 rounded-3 text-center" style={{ minHeight: "100vh", overflowY: "auto" }}>
         <h3 className="mb-4">Recent Listings</h3>
-        <ul className="list-unstyled">
-          <li className="mb-3">
-            <div className="border p-3 rounded-3">
-              <h5>Ride to X Destination</h5>
-              <p>Looking for a ride to X. Let me know if you're heading that way!</p>
-            </div>
-          </li>
-          <li className="mb-3">
-            <div className="border p-3 rounded-3">
-              <h5>Going to Y Place</h5>
-              <p>I'm planning to go to Y place. Anyone interested in joining?</p>
-            </div>
-          </li>
-          {/* Add more listings dynamically here */}
-        </ul>
+
+        {/* Toggle Buttons */}
+        <div className="btn-group mb-4" role="group" aria-label="View Options">
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${viewOption === "offerings" ? "active" : ""}`}
+            onClick={() => handleViewOptionChange("offerings")}
+          >
+            Offerings
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${viewOption === "requests" ? "active" : ""}`}
+            onClick={() => handleViewOptionChange("requests")}
+          >
+            Requests
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${viewOption === "both" ? "active" : ""}`}
+            onClick={() => handleViewOptionChange("both")}
+          >
+            Both
+          </button>
+        </div>
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>Error: {error}</p>
+        ) : (
+          <div>
+            {/* Conditionally render based on viewOption */}
+            {viewOption === "offerings" || viewOption === "both" ? (
+              <div>
+                {offeringList.length > 0 ? (
+                  offeringList.map((offering, index) => (
+                    <div className="col-9 mx-auto" key={index}>
+                      <OfferingCard offering={offering} />
+                    </div>
+                  ))
+                ) : (
+                  <p>No offerings available.</p>
+                )}
+              </div>
+            ) : null}
+
+            {viewOption === "requests" || viewOption === "both" ? (
+              <div>
+                {requestList.length > 0 ? (
+                  requestList.map((request, index) => (
+                    <div className="col-9 mx-auto" key={index}>
+                      <RequestCard request={request} />
+                    </div>
+                  ))
+                ) : (
+                  <p>No requests available.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* Your Recent Posts Section (50%) */}
@@ -131,10 +201,18 @@ function DashboardLayout() {
           <p>There are no posts.</p>
         )}
       </div>
-      <UserAgreementPopup show={showAgreement} handleAccept={handleAcceptAgreement} />
-      <RedirectUserInfoPopup show={showNextPopup} onConfirm={handleGoToNextPage} onSkip={handleDoItLater} />
+
+      <UserAgreementPopup
+        show={showAgreement}
+        handleAccept={handleAcceptAgreement}
+      />
+      <RedirectUserInfoPopup
+        show={showNextPopup}
+        onConfirm={handleGoToNextPage}
+        onSkip={handleDoItLater}
+      />
     </div>
   );
-};
+}
 
 export default DashboardLayout;

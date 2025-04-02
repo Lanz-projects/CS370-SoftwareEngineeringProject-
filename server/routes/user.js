@@ -155,4 +155,100 @@ router.put("/api/user", verifyToken, async (req, res) => {
   }
 });
 
+// Fetch request data along with user profile (specific fields) in request post
+router.get("/api/request/:requestId", async (req, res) => {
+  const { requestId } = req.params;
+
+  try {
+    // Find the request by its ID
+    const request = await Request.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    // Find the user by their 'uid' (which is stored in 'userid') and populate 'vehicleid'
+    const user = await User.findOne({ uid: request.userid })
+      .select([
+        "uid", 
+        "email", 
+        "name", 
+        "vehicleid", 
+        "contactInfo", 
+        "completedUserProfile", 
+        "acceptedUserAgreement", 
+        "createdAt"
+      ])
+      .populate("vehicleid"); // Populate the 'vehicleid' field
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Respond with the request and the specific user data
+    res.status(200).json({
+      request: {
+        name: request.name,
+        location: request.location,
+        arrivaldate: request.arrivaldate,
+        notes: request.notes,
+        wants: request.wants,
+        user: user // The populated user object, including vehicle info
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Fetch offering data along with the user profile (specific fields) offering post
+router.get("/api/offering/:offeringId", async (req, res) => {
+  const { offeringId } = req.params;
+
+  try {
+    // Find the offering by its ID
+    const offering = await Offering.findById(offeringId); 
+    
+    if (!offering) {
+      return res.status(404).json({ error: "Offering not found" });
+      
+    }
+
+    // Find the user by their 'uid' (which is stored in 'userid') and populate 'vehicleid'
+    const user = await User.findOne({ uid: offering.userid })
+      .select([
+        "uid", 
+        "email", 
+        "name", 
+        "vehicleid", 
+        "contactInfo", 
+        "completedUserProfile", 
+        "acceptedUserAgreement", 
+        "createdAt"
+      ])
+      .populate("vehicleid"); // Populate the 'vehicleid' field
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Respond with the offering and the specific user data
+    res.status(200).json({
+      offering: {
+        name: offering.name,
+        location: offering.location,
+        arrivaldate: offering.arrivaldate,
+        notes: offering.notes,
+        user: user // The populated user object, including vehicle info
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching offering:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
 module.exports = router;

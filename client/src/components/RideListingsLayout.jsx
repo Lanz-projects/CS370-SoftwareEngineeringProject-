@@ -102,7 +102,7 @@ const RideListingLayout = () => {
       </div>
 
       {/* Ride Listings Section (30%) */}
-      <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3">
+      <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3 d-flex flex-column">
         <div className="d-flex justify-content-between mb-4">
           <button
             className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
@@ -132,7 +132,7 @@ const RideListingLayout = () => {
 
         <h3 className="mb-4">Ride Listings</h3>
 
-        <div>
+        <div className="overflow-auto" style={{ flexGrow: 1, maxHeight: 'calc(100vh - 180px)' }}>
           {offeringList.length === 0 && requestList.length === 0 ? (
             <p>No ride listings available.</p>
           ) : (

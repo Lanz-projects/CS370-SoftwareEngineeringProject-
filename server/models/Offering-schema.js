@@ -34,7 +34,7 @@ const offeringSchema = new Schema({
         type: String,
         required: true
     }
-});
+}, { timestamps: true });
 
 // Add a geospatial index for efficient querying
 offeringSchema.index({ location: '2dsphere' });

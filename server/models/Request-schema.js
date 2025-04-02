@@ -34,7 +34,7 @@ const requestSchema = new Schema({
         type: String,
         default: "" // Section for additional "wants" notes
     }
-});
+}, { timestamps: true });
 
 // Add geospatial index for efficient location-based queries
 requestSchema.index({ location: '2dsphere' });
