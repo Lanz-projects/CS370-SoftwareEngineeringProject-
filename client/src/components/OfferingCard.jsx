@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person } from "react-bootstrap-icons";
+import { Star, Person, People } from "react-bootstrap-icons";
 
 const OfferingCard = ({ offering }) => {
   const { name, location, arrivaldate, vehicleid, notes, userid } = offering;
@@ -13,10 +13,9 @@ const OfferingCard = ({ offering }) => {
   // Function to fetch user profile
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/offering/${offering._id}`); // Use the new endpoint for offering
+      const response = await fetch(`/api/offering/${offering._id}`);
       const data = await response.json();
       if (data.offering) {
-        //console.log(data.offering.user);
         setUserProfile(data.offering.user);
         setShowProfile(true);
       }
@@ -64,6 +63,16 @@ const OfferingCard = ({ offering }) => {
             <strong>Notes: </strong>
             {notes || "No additional notes."}
           </Card.Text>
+
+          {/* New: Available Seats & Wait List */}
+          <Card.Text className="d-flex align-items-center mb-1">
+            <Person className="me-2" />
+            <strong>Available Seats:</strong> 3
+          </Card.Text>
+          <Card.Text className="d-flex align-items-center">
+            <People className="me-2" />
+            <strong>Wait List:</strong> 2
+          </Card.Text>
         </Card.Body>
 
         {/* Request to Ride Button - Bottom */}
@@ -85,41 +94,20 @@ const OfferingCard = ({ offering }) => {
           {userProfile ? (
             <>
               {/* Name */}
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Name</div>
+              <div className="mb-3 p-3 border rounded">
+                <div className="fw-bold mb-1">Name</div>
                 <div>{userProfile.name}</div>
               </div>
 
               {/* Email */}
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Email</div>
+              <div className="mb-3 p-3 border rounded">
+                <div className="fw-bold mb-1">Email</div>
                 <div>{userProfile.email}</div>
               </div>
 
               {/* Contact Info */}
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Contact</div>
+              <div className="mb-3 p-3 border rounded">
+                <div className="fw-bold mb-1">Contact</div>
                 {userProfile.contactInfo && userProfile.contactInfo.length > 0 ? (
                   <ul>
                     {userProfile.contactInfo.map((info, index) => (
@@ -134,15 +122,8 @@ const OfferingCard = ({ offering }) => {
               </div>
 
               {/* Vehicle Info */}
-              <div
-                style={{
-                  marginTop: "10px",
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Vehicle Info</div>
+              <div className="mb-3 p-3 border rounded">
+                <div className="fw-bold mb-1">Vehicle Info</div>
                 <div>
                   {userProfile.vehicleid
                     ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`

@@ -103,23 +103,46 @@ const RideListingLayout = () => {
 
       {/* Ride Listings Section (30%) */}
       <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3 d-flex flex-column">
+        
+        {/* Themed Buttons: Request, Post, Filter */}
         <div className="d-flex justify-content-between mb-4">
           <button
-            className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
+            className="btn rounded-pill me-2 flex-grow-1"
             onClick={() => setShowRequestRideModal(true)}
-            style={{ backgroundColor: "black", color: "#510b76", border: "none" }}
+            style={{
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
+              border: "none",
+            }}
           >
             Request a Ride
           </button>
+
           <button
-            className="btn btn-light text-white rounded-pill flex-grow-1 ms-2"
+            className="btn rounded-pill me-2 flex-grow-1"
             onClick={() => setShowPostRideListingModal(true)}
-            style={{ backgroundColor: "black", color: "#510b76", border: "none" }}
+            style={{
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
+              border: "none",
+            }}
           >
             Post a Ride Listing
           </button>
+
+          <button
+            className="btn rounded-pill flex-grow-1"
+            style={{
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
+              border: "none",
+            }}
+          >
+            ☰ Filter
+          </button>
         </div>
 
+        {/* Modals */}
         <RequestRide 
           show={showRequestRideModal} 
           handleClose={() => setShowRequestRideModal(false)}
@@ -132,6 +155,7 @@ const RideListingLayout = () => {
 
         <h3 className="mb-4">Ride Listings</h3>
 
+        {/* Listings */}
         <div className="overflow-auto" style={{ flexGrow: 1, maxHeight: 'calc(100vh - 180px)' }}>
           {offeringList.length === 0 && requestList.length === 0 ? (
             <p>No ride listings available.</p>

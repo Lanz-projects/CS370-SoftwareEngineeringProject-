@@ -8,16 +8,15 @@ const PostRideListing = ({ show, handleClose }) => {
   const [arrivalDate, setArrivalDate] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [notes, setNotes] = useState("");
+  const [availableSeats, setAvailableSeats] = useState(""); // 🆕 new state
   const [message, setMessage] = useState(null);
   const [errors, setErrors] = useState({});
 
-  // Get today's date and one month ahead date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const maxDate = new Date(today);
   maxDate.setMonth(today.getMonth() + 1);
 
-  // Format dates in YYYY-MM-DD format
   const todayString = today.toISOString().split("T")[0];
   const maxDateString = maxDate.toISOString().split("T")[0];
 
@@ -29,6 +28,7 @@ const PostRideListing = ({ show, handleClose }) => {
     else if (arrivalDate < todayString) newErrors.arrivalDate = "Arrival date cannot be in the past";
     else if (arrivalDate > maxDateString) newErrors.arrivalDate = "Arrival date cannot be more than one month ahead";
     if (notes.length > 200) newErrors.notes = "Notes must be under 200 characters";
+    if (!availableSeats || availableSeats <= 0) newErrors.availableSeats = "Available seats must be at least 1";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -52,6 +52,7 @@ const PostRideListing = ({ show, handleClose }) => {
           arrivaldate: arrivalDate,
           vehicleid: vehicleId,
           notes,
+          availableSeats: parseInt(availableSeats, 10), // 🆕 include it
         }),
       });
 
@@ -59,7 +60,7 @@ const PostRideListing = ({ show, handleClose }) => {
 
       if (response.ok) {
         setMessage({ type: "success", text: "Ride offering posted successfully!" });
-        handleClose(); // Close modal
+        handleClose();
       } else {
         setMessage({ type: "danger", text: data.error || "Failed to post offering." });
       }
@@ -76,7 +77,6 @@ const PostRideListing = ({ show, handleClose }) => {
       <Modal.Body>
         {message && <Alert variant={message.type}>{message.text}</Alert>}
         <Form onSubmit={handleSubmit}>
-          {/* Name */}
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
@@ -89,7 +89,6 @@ const PostRideListing = ({ show, handleClose }) => {
             <Form.Control.Feedback type="invalid">{errors.name}</Form.Control.Feedback>
           </Form.Group>
 
-          {/* Latitude */}
           <Form.Group className="mb-3">
             <Form.Label>Latitude</Form.Label>
             <Form.Control
@@ -102,7 +101,6 @@ const PostRideListing = ({ show, handleClose }) => {
             <Form.Control.Feedback type="invalid">{errors.location}</Form.Control.Feedback>
           </Form.Group>
 
-          {/* Longitude */}
           <Form.Group className="mb-3">
             <Form.Label>Longitude</Form.Label>
             <Form.Control
@@ -115,7 +113,6 @@ const PostRideListing = ({ show, handleClose }) => {
             <Form.Control.Feedback type="invalid">{errors.location}</Form.Control.Feedback>
           </Form.Group>
 
-          {/* Arrival Date */}
           <Form.Group className="mb-3">
             <Form.Label>Arrival Date</Form.Label>
             <Form.Control
@@ -129,7 +126,20 @@ const PostRideListing = ({ show, handleClose }) => {
             <Form.Control.Feedback type="invalid">{errors.arrivalDate}</Form.Control.Feedback>
           </Form.Group>
 
-          {/* Notes */}
+          {/* 🆕 Available Seats */}
+          <Form.Group className="mb-3">
+            <Form.Label>Available Seats</Form.Label>
+            <Form.Control
+              type="number"
+              placeholder="Enter number of available seats"
+              value={availableSeats}
+              onChange={(e) => setAvailableSeats(e.target.value)}
+              isInvalid={!!errors.availableSeats}
+              min={1}
+            />
+            <Form.Control.Feedback type="invalid">{errors.availableSeats}</Form.Control.Feedback>
+          </Form.Group>
+
           <Form.Group className="mb-3">
             <Form.Label>Notes</Form.Label>
             <Form.Control
