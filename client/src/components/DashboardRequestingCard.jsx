@@ -1,10 +1,47 @@
 import React from "react";
 import { Card, Button } from "react-bootstrap";
-import { Star, Person } from "react-bootstrap-icons";
+import { Star, Person, StarFill } from "react-bootstrap-icons";
 
-const DashboardRequestCard = ({ request }) => {
-  const { name, location, arrivaldate, notes, wants } = request;
+const DashboardRequestCard = ({ request, userFavorites }) => {
+  const { name, location, arrivaldate, notes, wants, _id } = request;
+
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+
+  const isFavorited = userFavorites.includes(_id);
+
+  // Handle the "star" button click
+  const handleFavorite = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get the auth token from local storage
+
+      // URL for the API based on whether the offering is favorited or not
+      const url = isFavorited
+        ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
+        : "http://localhost:5000/api/user/favorite-request"; // Use the add endpoint if it's not favorited
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requestId: _id,
+          type: "request", 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Request added to favorites:", data.message);
+      } else {
+        console.error("Error adding request to favorites:", data.error);
+      }
+    } catch (error) {
+      console.error("Error adding request to favorites", error);
+    }
+  };
 
   return (
     <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -12,10 +49,15 @@ const DashboardRequestCard = ({ request }) => {
       <Button
         variant="outline-warning"
         className="position-absolute top-0 end-0 m-2 p-1 border-0"
+        onClick={handleFavorite}
       >
-        <Star size={20} />
+        {isFavorited ? (
+          <StarFill size={20} color="gold" />
+        ) : (
+          <Star size={20} color="gray" />
+        )}
       </Button>
-      
+
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center">
           <Card.Title>{name}</Card.Title>
@@ -24,8 +66,10 @@ const DashboardRequestCard = ({ request }) => {
             <Person size={20} /> Profile
           </Button>
         </div>
-        
-        <Card.Subtitle className="mb-2 text-muted">Request for a ride</Card.Subtitle>
+
+        <Card.Subtitle className="mb-2 text-muted">
+          Request for a ride
+        </Card.Subtitle>
         <Card.Text>
           <strong>Location: </strong>
           {locationString}
@@ -45,7 +89,7 @@ const DashboardRequestCard = ({ request }) => {
           </Card.Text>
         )}
       </Card.Body>
-      
+
       {/* Accept Button - Bottom */}
       <Card.Footer className="bg-white border-0 text-center">
         <Button variant="danger" className="w-100">

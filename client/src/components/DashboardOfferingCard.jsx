@@ -1,12 +1,49 @@
 import React from "react";
 import { Card, Button } from "react-bootstrap";
-import { Star, Person } from "react-bootstrap-icons";
+import { Star, Person, StarFill } from "react-bootstrap-icons";
 
-const DashboardOfferingCard = ({ offering }) => {
-  const { name, location, arrivaldate, vehicleid, notes } = offering;
+const DashboardOfferingCard = ({ offering, userFavorites }) => {
+  const { name, location, arrivaldate, vehicleid, notes, _id } = offering;
 
   // Format the location to a readable string (longitude, latitude)
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+
+  // Check if this offering is favorited
+  const isFavorited = userFavorites.includes(_id);
+
+  // Handle the "star" button click (Add or Remove from Favorites)
+  const handleFavorite = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get the auth token from local storage
+
+      // URL for the API based on whether the offering is favorited or not
+      const url = isFavorited
+        ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
+        : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offeringId: _id, // Sending the offeringId for either adding or removing
+          type: "offering", // Indicating that it's an offering
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(`${isFavorited ? "Offering removed from" : "Offering added to"} favorites:`, data.message);
+      } else {
+        console.error(`${isFavorited ? "Error removing" : "Error adding"} offering from favorites:`, data.error);
+      }
+    } catch (error) {
+      console.error(`${isFavorited ? "Error removing" : "Error adding"} offering from favorites`, error);
+    }
+  };
 
   return (
     <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -14,10 +51,15 @@ const DashboardOfferingCard = ({ offering }) => {
       <Button
         variant="outline-warning"
         className="position-absolute top-0 end-0 m-2 p-1 border-0"
+        onClick={handleFavorite} // Trigger the handleFavorite function
       >
-        <Star size={20} />
+        {isFavorited ? (
+          <StarFill size={20} color="gold" />
+        ) : (
+          <Star size={20} color="gray" />
+        )}
       </Button>
-      
+
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center">
           <Card.Title>{name}</Card.Title>
@@ -26,7 +68,8 @@ const DashboardOfferingCard = ({ offering }) => {
             <Person size={20} /> Profile
           </Button>
         </div>
-        
+
+        <Card.Subtitle className="mb-2 text-muted">Offer a ride</Card.Subtitle>
         <Card.Text>
           <strong>Location: </strong>
           {locationString}

@@ -249,6 +249,104 @@ router.get("/api/offering/:offeringId", async (req, res) => {
   }
 });
 
+// Add an offering to user's favorite offerings
+router.put("/api/user/favorite-offering", verifyToken, async (req, res) => {
+  const { offeringId } = req.body;
+  const userUid = req.user.uid; // Get the UID from the verified token
+
+  try {
+    // Find the user by UID
+    const user = await User.findOne({ uid: userUid });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Add the offeringId to the favoriteOfferings array if it doesn't already exist
+    if (!user.favoriteOfferings.includes(offeringId)) {
+      user.favoriteOfferings.push(offeringId);
+      await user.save();
+    }
+
+    res.status(200).json({ message: "Offering added to favorites" });
+  } catch (error) {
+    console.error("Error adding offering to favorites:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Add a request to user's favorite requests
+router.put("/api/user/favorite-request", verifyToken, async (req, res) => {
+  const { requestId } = req.body; // requestId corresponds to the request the user wants to favorite
+  const userUid = req.user.uid; // Get the UID from the verified token
+
+  try {
+    // Find the user by UID
+    const user = await User.findOne({ uid: userUid });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Add the requestId to the favoriteRequests array if it doesn't already exist
+    if (!user.favoriteRequests.includes(requestId)) {
+      user.favoriteRequests.push(requestId);
+      await user.save();
+    }
+
+    res.status(200).json({ message: "Request added to favorites" });
+  } catch (error) {
+    console.error("Error adding requesting to favorites:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Remove an offering or request from user's favorites
+router.put("/api/user/remove-favorite", verifyToken, async (req, res) => {
+  const { offeringId, requestId, type } = req.body; // either offeringId or requestId, and the type ('offering' or 'request')
+  const userUid = req.user.uid; // Get the UID from the verified token
+
+  try {
+    // Find the user by UID
+    const user = await User.findOne({ uid: userUid });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Depending on type, either handle offering or request
+    let favoritesArray;
+    let itemId;
+    let message;
+
+    if (type === 'offering') {
+      favoritesArray = user.favoriteOfferings;
+      itemId = offeringId;
+      message = "Offering";
+    } else if (type === 'request') {
+      favoritesArray = user.favoriteRequests;
+      itemId = requestId;
+      message = "Request";
+    } else {
+      return res.status(400).json({ error: "Invalid type. Must be 'offering' or 'request'" });
+    }
+
+    // Remove the item from the favorites array
+    const itemIndex = favoritesArray.indexOf(itemId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: `${message} not found in favorites` });
+    }
+
+    // Remove the item from the array
+    favoritesArray.splice(itemIndex, 1);
+    await user.save();
+
+    res.status(200).json({ message: `${message} removed from favorites` });
+  } catch (error) {
+    console.error("Error removing favorite:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 module.exports = router;

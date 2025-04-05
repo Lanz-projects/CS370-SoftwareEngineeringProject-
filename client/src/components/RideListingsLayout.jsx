@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 import RequestRide from "./RequestRide";
 import PostRideListing from "./PostRideListing";
 import OfferingCard from "./OfferingCard";
@@ -30,7 +30,12 @@ const Map = () => {
   if (!isLoaded) return <div>Loading map...</div>;
 
   return (
-    <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12} onLoad={onLoad}>
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={12}
+      onLoad={onLoad}
+    >
       <Marker position={center} />
     </GoogleMap>
   );
@@ -38,19 +43,28 @@ const Map = () => {
 
 const RideListingLayout = () => {
   const [showRequestRideModal, setShowRequestRideModal] = useState(false);
-  const [showPostRideListingModal, setShowPostRideListingModal] = useState(false);
+  const [showPostRideListingModal, setShowPostRideListingModal] =
+    useState(false);
   const [offeringList, setOfferingList] = useState([]);
   const [requestList, setRequestList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [favoriteOfferIDList, setfavoriteOfferIDList] = useState([]); // State to hold users favorite offerings id
+  const [favoriteRequestIDList, setfavoriteRequestIDList] = useState([]); // State to hold users favorite requests id
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
       const response = await fetch("/api/all-data", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       const data = await response.json();
@@ -58,6 +72,21 @@ const RideListingLayout = () => {
         setOfferingList(data.offerings || []);
         setRequestList(data.requests || []);
       }
+
+      // Fetching favorite requesting and offering ids
+      const favoriteIdsResponse = await fetch(
+        "http://localhost:5000/api/favorites-ids",
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const favoriteIdsdata = await favoriteIdsResponse.json();
+      //console.log(favoriteIdsdata);
+      setfavoriteOfferIDList(favoriteIdsdata.favoriteOfferingsID);
+      setfavoriteRequestIDList(favoriteIdsdata.favoriteRequestsID);
+
+
     } catch (error) {
       setError(error.message);
       console.error("Error fetching data:", error);
@@ -71,7 +100,7 @@ const RideListingLayout = () => {
   }, []);
 
   const handleNewRequest = (newRequest) => {
-    setRequestList(prev => [newRequest, ...prev]);
+    setRequestList((prev) => [newRequest, ...prev]);
   };
 
   if (loading) {
@@ -107,32 +136,43 @@ const RideListingLayout = () => {
           <button
             className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
             onClick={() => setShowRequestRideModal(true)}
-            style={{ backgroundColor: "black", color: "#510b76", border: "none" }}
+            style={{
+              backgroundColor: "black",
+              color: "#510b76",
+              border: "none",
+            }}
           >
             Request a Ride
           </button>
           <button
             className="btn btn-light text-white rounded-pill flex-grow-1 ms-2"
             onClick={() => setShowPostRideListingModal(true)}
-            style={{ backgroundColor: "black", color: "#510b76", border: "none" }}
+            style={{
+              backgroundColor: "black",
+              color: "#510b76",
+              border: "none",
+            }}
           >
             Post a Ride Listing
           </button>
         </div>
 
-        <RequestRide 
-          show={showRequestRideModal} 
+        <RequestRide
+          show={showRequestRideModal}
           handleClose={() => setShowRequestRideModal(false)}
           onRequestSubmit={handleNewRequest}
         />
-        <PostRideListing 
-          show={showPostRideListingModal} 
-          handleClose={() => setShowPostRideListingModal(false)} 
+        <PostRideListing
+          show={showPostRideListingModal}
+          handleClose={() => setShowPostRideListingModal(false)}
         />
 
         <h3 className="mb-4">Ride Listings</h3>
 
-        <div className="overflow-auto" style={{ flexGrow: 1, maxHeight: 'calc(100vh - 180px)' }}>
+        <div
+          className="overflow-auto"
+          style={{ flexGrow: 1, maxHeight: "calc(100vh - 180px)" }}
+        >
           {offeringList.length === 0 && requestList.length === 0 ? (
             <p>No ride listings available.</p>
           ) : (
@@ -141,7 +181,7 @@ const RideListingLayout = () => {
                 <div className="mb-4">
                   <h5>Offering Listings</h5>
                   {offeringList.map((offering) => (
-                    <OfferingCard key={offering._id} offering={offering} />
+                    <OfferingCard key={offering._id} offering={offering} userFavorites={favoriteOfferIDList}/>
                   ))}
                 </div>
               )}
@@ -150,7 +190,7 @@ const RideListingLayout = () => {
                 <div>
                   <h5>Request Listings</h5>
                   {requestList.map((request) => (
-                    <RequestCard key={request._id} request={request} />
+                    <RequestCard key={request._id} request={request} userFavorites={favoriteRequestIDList}/>
                   ))}
                 </div>
               )}

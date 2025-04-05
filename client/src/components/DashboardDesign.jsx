@@ -5,23 +5,32 @@ import UserAgreementPopup from "../components/UserAgreement";
 import RedirectUserInfoPopup from "./RedirectUserInfoPopup";
 import OfferingCard from "./OfferingCard"; // Import OfferingCard component
 import RequestCard from "./RequestCard"; // Import RequestCard component
+import DashboardRequestCard from "./DashboardRequestingCard";
+import DashboardOfferingCard from "./DashboardOfferingCard";
 
 function DashboardLayout() {
-  const [recentPosts, setRecentPosts] = useState([]); // State to hold recent posts
   const [offeringList, setOfferingList] = useState([]); // State to hold offerings
+  const [requestUserList, setrequestUserList] = useState([]); // State to hold requests
+  const [offeringUserList, setofferingUserList] = useState([]); // State to hold offerings
   const [requestList, setRequestList] = useState([]); // State to hold requests
+  const [favoriteRequestList, setfavoriteRequestList] = useState([]); // State to hold users favorite requests
+  const [favoriteOfferList, setfavoriteOfferList] = useState([]); // State to hold users favorite offerings
+  const [favoriteOfferIDList, setfavoriteOfferIDList] = useState([]); // State to hold users favorite offerings id
+  const [favoriteRequestIDList, setfavoriteRequestIDList] = useState([]); // State to hold users favorite requests id
   const [showAgreement, setShowAgreement] = useState(false);
   const [showNextPopup, setShowNextPopup] = useState(false);
   const [loading, setLoading] = useState(true); // State for loading state
   const [error, setError] = useState(null); // State to capture any errors
   const [viewOption, setViewOption] = useState("both"); // State to toggle view between offerings and requests
+  const [viewPostOption, setViewPostOption] = useState("both"); // Separate view option for posts
+
   const navigate = useNavigate();
 
   // Fetching user data and all data (offerings and requests)
   useEffect(() => {
     const abortController = new AbortController(); // Prevent async issues
     const signal = abortController.signal;
-  
+
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -29,7 +38,7 @@ function DashboardLayout() {
           navigate("/login");
           return;
         }
-  
+
         const response = await fetch("http://localhost:5000/api/recent-data", {
           method: "GET",
           headers: {
@@ -37,15 +46,87 @@ function DashboardLayout() {
           },
           signal, // Attach the abort signal
         });
-  
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-  
+
         const data = await response.json();
         setOfferingList(data.offerings || []);
         setRequestList(data.requests || []);
-  
+
+        // Fetching offerings for the authenticated user
+        const offeringsResponse = await fetch(
+          "http://localhost:5000/api/offerings",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal,
+          }
+        );
+
+        if (!offeringsResponse.ok) {
+          throw new Error("Failed to fetch User's offerings");
+        }
+        const userOfferingdata = await offeringsResponse.json();
+        //console.log(userOfferingdata);
+        setofferingUserList(userOfferingdata || []);
+
+        // Fetching requests for the authenticated user
+        const requestsResponse = await fetch(
+          "http://localhost:5000/api/requests",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal,
+          }
+        );
+
+        if (!requestsResponse.ok) {
+          throw new Error("Failed to fetch User's requests");
+        }
+
+        const userRequestingdata = await requestsResponse.json();
+        //console.log(userRequestingdata);
+        setrequestUserList(userRequestingdata || []);
+
+        // Fetching favorite requests
+        const favoriteResponse = await fetch(
+          "http://localhost:5000/api/favorites",
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            signal,
+          }
+        );
+
+        if (!favoriteResponse.ok) {
+          throw new Error("Failed to fetch favorites");
+        }
+
+        const favoriteResponsedata = await favoriteResponse.json();
+        //console.log(favoriteResponsedata);
+        setfavoriteOfferList(favoriteResponsedata.favoriteOfferings || []);
+        setfavoriteRequestList(favoriteResponsedata.favoriteRequests || []);
+
+        // Fetching favorite requesting and offering ids
+        const favoriteIdsResponse = await fetch(
+          "http://localhost:5000/api/favorites-ids",
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            signal,
+          }
+        );
+        const favoriteIdsdata = await favoriteIdsResponse.json();
+        //console.log(favoriteIdsdata);
+        setfavoriteOfferIDList(favoriteIdsdata.favoriteOfferingsID);
+        setfavoriteRequestIDList(favoriteIdsdata.favoriteRequestsID);
+
         // Check if user has accepted the agreement
         const userResponse = await fetch("http://localhost:5000/api/user", {
           method: "GET",
@@ -64,9 +145,9 @@ function DashboardLayout() {
         setLoading(false);
       }
     };
-  
+
     fetchData();
-  
+
     return () => {
       abortController.abort(); // Cleanup function to cancel request if component unmounts
     };
@@ -114,31 +195,44 @@ function DashboardLayout() {
     setViewOption(option); // Change the view option based on the user's selection
   };
 
+  const handlePostViewOptionChange = (option) => {
+    setViewPostOption(option); // Change the view option for posts separately
+  };
+
   return (
     <div className="container-fluid d-flex vh-100 p-0">
       {/* Recent Listings Section (50%) */}
-      <div className="col-lg-6 col-md-6 bg-light text-black p-4 rounded-3 text-center" style={{ minHeight: "100vh", overflowY: "auto" }}>
+      <div
+        className="col-lg-6 col-md-6 bg-light text-black p-4 rounded-3 text-center"
+        style={{ minHeight: "100vh", overflowY: "auto" }}
+      >
         <h3 className="mb-4">Recent Listings</h3>
 
         {/* Toggle Buttons */}
         <div className="btn-group mb-4" role="group" aria-label="View Options">
           <button
             type="button"
-            className={`btn btn-outline-primary ${viewOption === "offerings" ? "active" : ""}`}
+            className={`btn btn-outline-primary ${
+              viewOption === "offerings" ? "active" : ""
+            }`}
             onClick={() => handleViewOptionChange("offerings")}
           >
             Offerings
           </button>
           <button
             type="button"
-            className={`btn btn-outline-primary ${viewOption === "requests" ? "active" : ""}`}
+            className={`btn btn-outline-primary ${
+              viewOption === "requests" ? "active" : ""
+            }`}
             onClick={() => handleViewOptionChange("requests")}
           >
             Requests
           </button>
           <button
             type="button"
-            className={`btn btn-outline-primary ${viewOption === "both" ? "active" : ""}`}
+            className={`btn btn-outline-primary ${
+              viewOption === "both" ? "active" : ""
+            }`}
             onClick={() => handleViewOptionChange("both")}
           >
             Both
@@ -157,7 +251,7 @@ function DashboardLayout() {
                 {offeringList.length > 0 ? (
                   offeringList.map((offering, index) => (
                     <div className="col-9 mx-auto" key={index}>
-                      <OfferingCard offering={offering} />
+                      <OfferingCard offering={offering} userFavorites={favoriteOfferIDList}/>
                     </div>
                   ))
                 ) : (
@@ -171,7 +265,7 @@ function DashboardLayout() {
                 {requestList.length > 0 ? (
                   requestList.map((request, index) => (
                     <div className="col-9 mx-auto" key={index}>
-                      <RequestCard request={request} />
+                      <RequestCard request={request} userFavorites={favoriteRequestIDList}/>
                     </div>
                   ))
                 ) : (
@@ -184,21 +278,115 @@ function DashboardLayout() {
       </div>
 
       {/* Your Recent Posts Section (50%) */}
-      <div className="col-lg-6 col-md-6 bg-white text-black p-4 rounded-3 text-center">
+      <div
+        className="col-lg-6 col-md-6 bg-white text-black p-4 rounded-3 text-center"
+        style={{ minHeight: "100vh", overflowY: "auto" }}
+      >
         <h3 className="mb-4">Your Recent Posts</h3>
-        {recentPosts.length > 0 ? (
-          <ul className="list-unstyled">
-            {recentPosts.map((post, index) => (
-              <li key={index} className="mb-3">
-                <div className="border p-3 rounded-3">
-                  <h5>{post.title}</h5>
-                  <p>{post.content}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+
+        {/* Toggle Buttons for Posts */}
+        <div
+          className="btn-group mb-4"
+          role="group"
+          aria-label="Post View Options"
+        >
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${
+              viewPostOption === "offerings" ? "active" : ""
+            }`}
+            onClick={() => handlePostViewOptionChange("offerings")}
+          >
+            Your Offerings
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${
+              viewPostOption === "requests" ? "active" : ""
+            }`}
+            onClick={() => handlePostViewOptionChange("requests")}
+          >
+            Your Requests
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-primary ${
+              viewPostOption === "both" ? "active" : ""
+            }`}
+            onClick={() => handlePostViewOptionChange("both")}
+          >
+            Both
+          </button>
+          <button
+            type="button"
+            className={`btn btn-outline-warning ${
+              viewPostOption === "favorites" ? "active" : ""
+            }`}
+            onClick={() => handlePostViewOptionChange("favorites")}
+          >
+            Favorites
+          </button>
+        </div>
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p>Error: {error}</p>
         ) : (
-          <p>There are no posts.</p>
+          <div>
+            {/* Conditionally render based on viewPostOption */}
+            {viewPostOption === "offerings" || viewPostOption === "both" ? (
+              <div>
+                {offeringUserList.length > 0 ? (
+                  offeringUserList.map((offering, index) => (
+                    <div className="col-9 mx-auto" key={index}>
+                      <DashboardOfferingCard offering={offering} userFavorites={favoriteOfferIDList} />
+                    </div>
+                  ))
+                ) : (
+                  <p>No offerings available.</p>
+                )}
+              </div>
+            ) : null}
+
+            {viewPostOption === "requests" || viewPostOption === "both" ? (
+              <div>
+                {requestUserList.length > 0 ? (
+                  requestUserList.map((request, index) => (
+                    <div className="col-9 mx-auto" key={index}>
+                      <DashboardRequestCard request={request} userFavorites={favoriteRequestIDList}/>
+                    </div>
+                  ))
+                ) : (
+                  <p>No requests available.</p>
+                )}
+              </div>
+            ) : null}
+            {viewPostOption === "favorites" ? (
+              <div>
+                <h5>Your Favorited Offerings</h5>
+                {favoriteOfferList.length > 0 ? (
+                  favoriteOfferList.map((offering, index) => (
+                    <div className="col-9 mx-auto" key={`fav-offer-${index}`}>
+                      <DashboardOfferingCard offering={offering} userFavorites={favoriteOfferIDList} />
+                    </div>
+                  ))
+                ) : (
+                  <p>No favorite offerings yet.</p>
+                )}
+                {favoriteRequestList.length > 0 ? (
+                  favoriteRequestList.map((request, index) => (
+                    <div className="col-9 mx-auto" key={`fav-request-${index}`}>
+                      {/* Replace with the correct component for displaying requests */}
+                      <DashboardRequestCard request={request}  userFavorites={favoriteRequestIDList}/>
+                    </div>
+                  ))
+                ) : (
+                  <p>No favorite requests yet.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
 

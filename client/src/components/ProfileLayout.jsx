@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Redirect after deletion
 import "bootstrap/dist/css/bootstrap.min.css";
+import { getAuth } from "firebase/auth";
 
 const ProfileLayout = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -46,17 +47,27 @@ const ProfileLayout = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Clear local storage and redirect
+      if (data) {
         localStorage.removeItem("token");
         localStorage.removeItem("tokenExpiration");
-        navigate("/"); // Redirect to homepage
+      }
+
+      if (response.ok) {
+        // Ensure that after deleting the account, user is redirected
+        localStorage.removeItem("token");
+        localStorage.removeItem("tokenExpiration");
+
+        // Sign out the user from Firebase to clear the session
+        const auth = getAuth();
+        await auth.signOut();
+        
+        navigate('/');
       } else {
         alert(`Error: ${data.error}`);
       }
     } catch (error) {
       console.error("Deletion error:", error);
-      alert("Failed to delete account.");
+      alert("Failed to delete account. Try again later");
     }
   };
 
@@ -69,7 +80,7 @@ const ProfileLayout = () => {
   };
 
   const updateProfile = () => {
-    navigate('/updateprofile');
+    navigate("/updateprofile");
   };
 
   const finishProfile = () => {
@@ -85,7 +96,7 @@ const ProfileLayout = () => {
   };
 
   const updateVehicle = () => {
-    navigate('/updatevehicle');
+    navigate("/updatevehicle");
   };
 
   const addVehicle = () => {
