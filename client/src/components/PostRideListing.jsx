@@ -52,7 +52,7 @@ const PostRideListing = ({ show, handleClose }) => {
           arrivaldate: arrivalDate,
           vehicleid: vehicleId,
           notes,
-          availableSeats: parseInt(availableSeats, 10), // 🆕 include it
+          maxSeats: parseInt(availableSeats, 10), // 🆕 include it
         }),
       });
 

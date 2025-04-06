@@ -1,16 +1,28 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "react-bootstrap";
 import { Star, Person, People } from "react-bootstrap-icons";
+import RequestToRideModal from "./RequestToRideModal"; // import the modal component
 
 const OfferingCard = ({ offering }) => {
-  const { name, location, arrivaldate, vehicleid, notes, userid } = offering;
+  const {
+    _id,
+    name,
+    location,
+    arrivaldate,
+    vehicleid,
+    notes,
+    userid,
+    maxSeats,
+    waitingList,
+  } = offering;
+
   const [showProfile, setShowProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [quickMessage, setQuickMessage] = useState("");
 
-  // Format the location to a readable string (longitude, latitude)
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
 
-  // Function to fetch user profile
   const fetchUserProfile = async () => {
     try {
       const response = await fetch(`/api/offering/${offering._id}`);
@@ -24,10 +36,16 @@ const OfferingCard = ({ offering }) => {
     }
   };
 
+  const handleConfirm = () => {
+    console.log("Confirmed with message:", quickMessage);
+    // Add logic here to send message to backend if needed
+    setShowRequestModal(false);
+    setQuickMessage("");
+  };
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
-        {/* Star Button - Top Right */}
         <Button
           variant="outline-warning"
           className="position-absolute top-0 end-0 m-2 p-1 border-0"
@@ -38,7 +56,6 @@ const OfferingCard = ({ offering }) => {
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center">
             <Card.Title>{name}</Card.Title>
-            {/* User Profile Button */}
             <Button
               variant="outline-primary"
               className="border-0"
@@ -64,26 +81,28 @@ const OfferingCard = ({ offering }) => {
             {notes || "No additional notes."}
           </Card.Text>
 
-          {/* New: Available Seats & Wait List */}
           <Card.Text className="d-flex align-items-center mb-1">
             <Person className="me-2" />
-            <strong>Available Seats:</strong> 3
+            <strong>Available Seats: {maxSeats}</strong>
           </Card.Text>
           <Card.Text className="d-flex align-items-center">
             <People className="me-2" />
-            <strong>Wait List:</strong> 2
+            <strong>Wait List: {waitingList.length}</strong>
           </Card.Text>
         </Card.Body>
 
-        {/* Request to Ride Button - Bottom */}
         <Card.Footer className="bg-white border-0 text-center">
-          <Button variant="primary" className="w-100">
+          <Button
+            variant="primary"
+            className="w-100"
+            onClick={() => setShowRequestModal(true)}
+          >
             Request to Ride
           </Button>
         </Card.Footer>
       </Card>
 
-      {/* Modal for User Profile */}
+      {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -93,22 +112,19 @@ const OfferingCard = ({ offering }) => {
         <Modal.Body>
           {userProfile ? (
             <>
-              {/* Name */}
               <div className="mb-3 p-3 border rounded">
                 <div className="fw-bold mb-1">Name</div>
                 <div>{userProfile.name}</div>
               </div>
 
-              {/* Email */}
               <div className="mb-3 p-3 border rounded">
                 <div className="fw-bold mb-1">Email</div>
                 <div>{userProfile.email}</div>
               </div>
 
-              {/* Contact Info */}
               <div className="mb-3 p-3 border rounded">
                 <div className="fw-bold mb-1">Contact</div>
-                {userProfile.contactInfo && userProfile.contactInfo.length > 0 ? (
+                {userProfile.contactInfo?.length > 0 ? (
                   <ul>
                     {userProfile.contactInfo.map((info, index) => (
                       <li key={index}>
@@ -121,7 +137,6 @@ const OfferingCard = ({ offering }) => {
                 )}
               </div>
 
-              {/* Vehicle Info */}
               <div className="mb-3 p-3 border rounded">
                 <div className="fw-bold mb-1">Vehicle Info</div>
                 <div>
@@ -141,6 +156,15 @@ const OfferingCard = ({ offering }) => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Request to Ride Modal */}
+      <RequestToRideModal
+        show={showRequestModal}
+        handleClose={() => setShowRequestModal(false)}
+        quickMessage={quickMessage}
+        setQuickMessage={setQuickMessage}
+        offeringId={_id}
+      />
     </>
   );
 };
