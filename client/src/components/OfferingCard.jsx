@@ -55,6 +55,7 @@ const OfferingCard = ({ offering, userFavorites }) => {
 
       if (response.ok) {
         console.log("Offering added to favorites:", data.message);
+        window.location.reload();
       } else {
         console.error("Error adding offering to favorites:", data.error);
       }
@@ -143,8 +144,10 @@ const OfferingCard = ({ offering, userFavorites }) => {
             variant="primary"
             className="w-100"
             onClick={() => setShowRequestModal(true)}
+            disabled={maxSeats === 0} // Disable button if seats are 0
           >
-            Request to Ride
+            {maxSeats === 0 ? "No Seats Available" : "Request to Ride"}{" "}
+            {/* Change text if no seats */}
           </Button>
         </Card.Footer>
       </Card>

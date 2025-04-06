@@ -1,16 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person, StarFill } from "react-bootstrap-icons";
+import { Star, Person, StarFill, Lock, Unlock } from "react-bootstrap-icons";
 
-const RequestCard = ({ request, userFavorites }) => {
-  const { name, location, arrivaldate, notes, wants, userid, _id } = request;
+const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
+  const { name, location, arrivaldate, notes, wants, userid, _id, userAccepted } = request;
   const [showProfile, setShowProfile] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showUnacceptConfirmation, setShowUnacceptConfirmation] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-
+  const [currentUserId, setCurrentUserId] = useState(null);
+  
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
 
   // Check if this offering is favorited
-  const isFavoritedStatus = userFavorites.includes(_id); 
+  const isFavoritedStatus = userFavorites.includes(_id);
+  
+  // Check if request is already accepted
+  const isAccepted = !!userAccepted;
+  
+  // Check if current user is the one who accepted it
+  const isAcceptedByCurrentUser = userAccepted === currentUserId;
+
+  // Fetch current user's ID on component mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          console.error("No token found in local storage");
+          return;
+        }
+        
+        const response = await fetch("http://localhost:5000/api/user", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUserId(userData.user.uid);
+        } else {
+          console.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
 
   // Function to fetch user profile
   const fetchUserProfile = async () => {
@@ -33,8 +73,8 @@ const RequestCard = ({ request, userFavorites }) => {
 
       // URL for the API based on whether the offering is favorited or not
       const url = isFavoritedStatus
-        ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
-        : "http://localhost:5000/api/user/favorite-request"; // Use the add endpoint if it's not favorited
+        ? "http://localhost:5000/api/user/remove-favorite"
+        : "http://localhost:5000/api/user/favorite-request";
 
       const response = await fetch(
         url,
@@ -52,14 +92,140 @@ const RequestCard = ({ request, userFavorites }) => {
       );
 
       const data = await response.json();
-      console.log(data);
       if (response.ok) {
-        console.log("Request added to favorites:", data.message);
+        console.log("Request favorite status updated:", data.message);
+        if (onAcceptComplete) onAcceptComplete(); 
+        window.location.reload();
       } else {
-        console.error("Error adding request to favorites:", data.error);
+        console.error("Error updating favorite status:", data.error);
       }
     } catch (error) {
-      console.error("Error adding request to favorites", error);
+      console.error("Error updating favorite status", error);
+    }
+  };
+
+  // Handle the "Accept" button click to show confirmation modal
+  const handleAccept = () => {
+    setShowConfirmation(true);
+  };
+
+  // Handle the "Unaccept" button click to show unaccept confirmation modal
+  const handleUnaccept = () => {
+    setShowUnacceptConfirmation(true);
+  };
+
+  // Handle the "Confirm" button click to accept the request and add to favorites
+  const handleConfirm = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Update the request to mark it as accepted
+      const acceptResponse = await fetch(
+        `http://localhost:5000/api/accept-request/${_id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        }
+      );
+
+      const acceptData = await acceptResponse.json();
+      
+      if (acceptResponse.ok) {
+        // Add to favorites if not already favorited
+        if (!isFavoritedStatus) {
+          await fetch(
+            "http://localhost:5000/api/user/favorite-request",
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                requestId: _id,
+                type: "request", 
+              }),
+            }
+          );
+        }
+        
+        console.log("Request accepted successfully:", acceptData.message);
+        
+        // Close confirmation modal
+        setShowConfirmation(false);
+        
+        // Notify parent component to refresh data
+        if (onAcceptComplete) {
+          onAcceptComplete();
+        };
+
+        window.location.reload();
+      } else {
+        console.error("Error accepting request:", acceptData.error);
+        setShowConfirmation(false);
+      }
+    } catch (error) {
+      console.error("Error in accept process:", error);
+      setShowConfirmation(false);
+    }
+  };
+
+  // Handle the "Confirm Unaccept" button click
+  const handleConfirmUnaccept = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Update the request to remove acceptance
+      const unacceptResponse = await fetch(
+        `http://localhost:5000/api/unaccept-request/${_id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        }
+      );
+
+      const unacceptData = await unacceptResponse.json();
+      
+      if (unacceptResponse.ok) {
+        // Remove from favorites if currently favorited
+        if (isFavoritedStatus) {
+          await fetch(
+            "http://localhost:5000/api/user/remove-favorite",
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                requestId: _id,
+                type: "request", 
+              }),
+            }
+          );
+          window.location.reload();
+        }
+        
+        console.log("Request unaccepted successfully:", unacceptData.message);
+        
+        // Close unaccept confirmation modal
+        setShowUnacceptConfirmation(false);
+        
+        // Notify parent component to refresh data
+        if (onAcceptComplete) onAcceptComplete();
+      } else {
+        console.error("Error unaccepting request:", unacceptData.error);
+        setShowUnacceptConfirmation(false);
+      }
+    } catch (error) {
+      console.error("Error in unaccept process:", error);
+      setShowUnacceptConfirmation(false);
     }
   };
 
@@ -70,7 +236,7 @@ const RequestCard = ({ request, userFavorites }) => {
         <Button
           variant="outline-warning"
           className="position-absolute top-0 end-0 m-2 p-1 border-0"
-          onClick={handleFavorite} // Add click handler
+          onClick={handleFavorite} 
         >
           {isFavoritedStatus ? (
             <StarFill size={20} color="gold" />
@@ -115,9 +281,21 @@ const RequestCard = ({ request, userFavorites }) => {
         </Card.Body>
 
         <Card.Footer className="bg-white border-0 text-center">
-          <Button variant="success" className="w-100">
-            Accept
-          </Button>
+          {isAccepted ? (
+            isAcceptedByCurrentUser ? (
+              <Button variant="warning" className="w-100" onClick={handleUnaccept}>
+                <Unlock size={16} className="me-1" /> Unaccept
+              </Button>
+            ) : (
+              <Button variant="secondary" className="w-100" disabled>
+                <Lock size={16} className="me-1" /> Already Accepted
+              </Button>
+            )
+          ) : (
+            <Button variant="success" className="w-100" onClick={handleAccept}>
+              Accept
+            </Button>
+          )}
         </Card.Footer>
       </Card>
 
@@ -131,17 +309,12 @@ const RequestCard = ({ request, userFavorites }) => {
         <Modal.Body>
           {userProfile ? (
             <>
-              {/* Name */}
               <div className="mb-3 p-2 border rounded">
                 <strong>Name:</strong> {userProfile.name}
               </div>
-
-              {/* Email */}
               <div className="mb-3 p-2 border rounded">
                 <strong>Email:</strong> {userProfile.email}
               </div>
-
-              {/* Contact Info */}
               <div className="mb-3 p-2 border rounded">
                 <strong>Contact Info:</strong>
                 {userProfile.contactInfo?.length > 0 ? (
@@ -156,8 +329,6 @@ const RequestCard = ({ request, userFavorites }) => {
                   <p>No contact information available</p>
                 )}
               </div>
-
-              {/* Vehicle Info */}
               <div className="mb-3 p-2 border rounded">
                 <strong>Vehicle Info:</strong>{" "}
                 {userProfile.vehicleid
@@ -172,6 +343,46 @@ const RequestCard = ({ request, userFavorites }) => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowProfile(false)}>
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Accept Confirmation Modal */}
+      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Acceptance</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Click confirm and the requester will be notified that you took on their request. This will also show up in your favorites on the dashboard.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleConfirm}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Unaccept Confirmation Modal */}
+      <Modal show={showUnacceptConfirmation} onHide={() => setShowUnacceptConfirmation(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Unaccept</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Are you sure you want to unaccept this request? The requester will be notified, and it will be removed from your favorites.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowUnacceptConfirmation(false)}>
+            Cancel
+          </Button>
+          <Button variant="warning" onClick={handleConfirmUnaccept}>
+            Confirm Unaccept
           </Button>
         </Modal.Footer>
       </Modal>

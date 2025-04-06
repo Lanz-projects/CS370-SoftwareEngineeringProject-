@@ -34,18 +34,8 @@ const requestSchema = new Schema({
         type: String,
         default: "" // Section for additional "wants" notes
     },
-    maxSeats: {
-        type: Number,
-        required: true,
-        min: 1 // Ensures maxSeats is at least 1
-    },
-    waitingList: {
-        type: [String], // Array of strings (user IDs)
-        default: [] // Default to an empty array
-    },
-    acceptedUsers: {
-        type: [String], // Array of strings (user IDs)
-        default: [] // Default to an empty array
+    userAccepted: {
+        type: String
     }
 }, { timestamps: true });
 

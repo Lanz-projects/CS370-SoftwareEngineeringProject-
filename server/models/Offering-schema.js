@@ -37,8 +37,11 @@ const offeringSchema = new Schema({
     maxSeats: {
         type: Number,
         required: true,
-        min: 1 // Ensures maxSeats is at least 1
+        min: 0 // Ensures maxSeats is at least 1
     },
+    originalMaxSeats: {
+        type: Number,
+      },
     waitingList: {
         type: [String], // Array of strings (user IDs)
         default: [] // Default to an empty array
@@ -47,9 +50,17 @@ const offeringSchema = new Schema({
         type: [String], // Array of strings (user IDs)
         default: [] // Default to an empty array
     },
-    quickMessage: {
-        type: [String]
-    }
+    quickMessage: [{
+        message: {
+            type: String,
+            required: true
+        },
+        userid: {
+            type: String,
+            ref: 'User',  // Foreign key reference to User schema
+            required: true
+        }
+    }],
 }, { timestamps: true });
 
 // Add a geospatial index for efficient querying

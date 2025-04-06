@@ -105,5 +105,77 @@ router.get("/api/favorites-ids", verifyToken, async (req, res) => {
   }
 });
 
+// GET: All upcoming offerings sorted by closest arrival date
+router.get("/api/offerings/closest-arrival", async (req, res) => {
+  try {
+    const today = new Date();
+    const offerings = await Offering.find({ arrivaldate: { $gte: today } })
+      .sort({ arrivaldate: 1 }); // Closest future date first
+
+    if (!offerings.length) {
+      return res.status(404).json({ message: "No upcoming offerings found" });
+    }
+    //console.log(offerings);
+    res.status(200).json(offerings);
+  } catch (error) {
+    console.error("Error fetching closest offerings:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// GET: All upcoming offerings sorted by farthest arrival date
+router.get("/api/offerings/farthest-arrival", async (req, res) => {
+  try {
+    const today = new Date();
+    const offerings = await Offering.find({ arrivaldate: { $gte: today } })
+      .sort({ arrivaldate: -1 }); // Farthest future date first
+
+    if (!offerings.length) {
+      return res.status(404).json({ message: "No upcoming offerings found" });
+    }
+    //console.log(offerings);
+    res.status(200).json(offerings);
+  } catch (error) {
+    console.error("Error fetching farthest offerings:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// GET: All upcoming requests sorted by closest arrival date
+router.get("/api/requests/closest-arrival", async (req, res) => {
+  try {
+    const today = new Date();
+    const requests = await Request.find({ arrivaldate: { $gte: today } })
+      .sort({ arrivaldate: 1 });
+
+    if (!requests.length) {
+      return res.status(404).json({ message: "No upcoming requests found" });
+    }
+    //console.log(requests);
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error("Error fetching closest requests:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// GET: All upcoming requests sorted by farthest arrival date
+router.get("/api/requests/farthest-arrival", async (req, res) => {
+  try {
+    const today = new Date();
+    const requests = await Request.find({ arrivaldate: { $gte: today } })
+      .sort({ arrivaldate: -1 });
+
+    if (!requests.length) {
+      return res.status(404).json({ message: "No upcoming requests found" });
+    }
+    //console.log(requests);
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error("Error fetching farthest requests:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 module.exports = router;

@@ -2,6 +2,8 @@ const express = require("express");
 const Request = require("../models/Request-schema");
 const User = require("../models/User-schema.js");
 const verifyToken = require("../middleware/verifyToken");
+const mongoose = require("mongoose");
+
 
 const router = express.Router();
 
@@ -113,27 +115,130 @@ router.get("/api/requests", verifyToken, async (req, res) => {
 // Delete a request
 router.delete("/api/delete-request/:id", verifyToken, async (req, res) => {
   const userId = req.user.uid;
-  const { id } = req.params; // The ID of the request to delete
+  const { id } = req.params;
 
   try {
-    // Find the request by ID and check if it belongs to the authenticated user
-    const request = await Request.findOne({ _id: id, userid: userId });
+    const requestId = new mongoose.Types.ObjectId(id); // Convert to ObjectId
+
+    // Confirm the request exists and belongs to the current user
+    const request = await Request.findOne({ _id: requestId, userid: userId });
 
     if (!request) {
-      return res.status(404).json({ error: "Request not found or does not belong to the authenticated user" });
+      return res.status(404).json({
+        error: "Request not found or does not belong to the authenticated user",
+      });
     }
 
-    // Delete the request
-    await Request.deleteOne({ _id: id });
+    // Remove the request ID from all users' favoriteRequest arrays
+    const result = await User.updateMany(
+      { favoriteRequests: requestId },
+      { $pull: { favoriteRequests: requestId } }
+    );
+
+    console.log(`Removed from ${result.modifiedCount} user(s).`);
+
+    // Now delete the request itself
+    await Request.deleteOne({ _id: requestId });
 
     res.status(200).json({
-      message: "Request deleted successfully!"
+      message: "Request deleted and removed from users' favorites successfully!",
     });
   } catch (error) {
     console.error("Error deleting request:", error);
     res.status(500).json({
       error: "Internal server error",
-      details: error.message
+      details: error.message,
+    });
+  }
+});
+
+
+// Accept request endpoint
+router.put("/api/accept-request/:id", verifyToken, async (req, res) => {
+  const requestId = req.params.id;
+  const userId = req.user.uid; // This comes from the token via verifyToken middleware
+  
+  try {
+    // Find the request first to check if it's already accepted
+    const request = await Request.findById(requestId);
+    
+    if (!request) {
+      return res.status(404).json({ 
+        error: "Request not found" 
+      });
+    }
+    
+    // Check if request is already accepted
+    if (request.userAccepted) {
+      return res.status(400).json({ 
+        error: "This request has already been accepted" 
+      });
+    }
+    
+    // Update the request with the accepting user's ID
+    const updatedRequest = await Request.findByIdAndUpdate(
+      requestId,
+      { userAccepted: userId },
+      { new: true } // Return the updated document
+    );
+
+    // Notify the original requester (would implement actual notification here)
+    //console.log(`User ${userId} accepted request from user ${request.userid}`);
+    
+    return res.status(200).json({ 
+      message: "Request accepted successfully",
+      request: updatedRequest
+    });
+  } catch (error) {
+    console.error("Error accepting request:", error);
+    return res.status(500).json({ 
+      error: "Internal server error",
+      details: error.message 
+    });
+  }
+});
+
+// Unaccept request endpoint
+router.put("/api/unaccept-request/:id", verifyToken, async (req, res) => {
+  const requestId = req.params.id;
+  const userId = req.user.uid; // This comes from the token via verifyToken middleware
+  
+  try {
+    // Find the request first
+    const request = await Request.findById(requestId);
+    
+    if (!request) {
+      return res.status(404).json({ 
+        error: "Request not found" 
+      });
+    }
+    
+    // Check if request is accepted by this user
+    if (request.userAccepted !== userId) {
+      return res.status(403).json({ 
+        error: "You can only unaccept requests that you have accepted" 
+      });
+    }
+    
+    // Update the request to remove the accepting user's ID
+    const updatedRequest = await Request.findByIdAndUpdate(
+      requestId,
+      { $unset: { userAccepted: "" } }, // Remove the userAccepted field
+      { new: true } // Return the updated document
+    );
+
+    // Notify the original requester (would implement actual notification here)
+    //console.log(`User ${userId} unaccepted request from user ${request.userid}`);
+    
+    return res.status(200).json({ 
+      message: "Request unaccepted successfully",
+      request: updatedRequest
+    });
+  } catch (error) {
+    console.error("Error unaccepting request:", error);
+    return res.status(500).json({ 
+      error: "Internal server error",
+      details: error.message 
     });
   }
 });
