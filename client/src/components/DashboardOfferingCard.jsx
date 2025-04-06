@@ -45,6 +45,29 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
     }
   };
 
+  // Handle the delete (cancel) action
+  const handleDelete = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get the auth token from local storage
+      const response = await fetch(`http://localhost:5000/api/delete-offering/${_id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`, // Attach the token in the Authorization header
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Offering deleted successfully:", data.message);
+      } else {
+        console.error("Error deleting offering:", data.error);
+      }
+    } catch (error) {
+      console.error("Error deleting offering", error);
+    }
+  };
+
   return (
     <Card className="mb-3 position-relative p-3 shadow-sm rounded">
       {/* Star Button - Top Right */}
@@ -90,7 +113,7 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
           <Button variant="success" size="md" className="w-50">
             Approve
           </Button>
-          <Button variant="danger" size="md" className="w-50">
+          <Button variant="danger" size="md" className="w-50" onClick={handleDelete}>
             Cancel
           </Button>
         </div>

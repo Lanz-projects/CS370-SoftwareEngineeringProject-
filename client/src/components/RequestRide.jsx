@@ -14,18 +14,32 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
   const [isLocationVerified, setIsLocationVerified] = useState(false);
   const destinationInputRef = useRef(null);
 
+  // Get today's date and one month ahead date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const maxDate = new Date(today);
+  maxDate.setMonth(today.getMonth() + 1);
+
+  // Format dates in YYYY-MM-DD format
+  const todayString = today.toISOString().split("T")[0];
+  const maxDateString = maxDate.toISOString().split("T")[0];
+
   const geocodeAddress = async (address) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${import.meta.env.VITE_GEOLOCATION_API}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address
+        )}&key=${import.meta.env.VITE_GEOLOCATION_API}`
       );
-      
+
       if (!response.ok) {
-        throw new Error(`Geocoding API request failed with status ${response.status}`);
+        throw new Error(
+          `Geocoding API request failed with status ${response.status}`
+        );
       }
-      
+
       const data = await response.json();
-      
+
       if (data.status !== "OK") {
         throw new Error(data.error_message || "Location not found");
       }
@@ -34,28 +48,27 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       if (!location) {
         throw new Error("No location data returned from geocoding service");
       }
-      
+
       const lng = parseFloat(location.lng);
       const lat = parseFloat(location.lat);
-      
+
       if (isNaN(lng)) {
         throw new Error(`Invalid longitude received: ${location.lng}`);
       }
       if (isNaN(lat)) {
         throw new Error(`Invalid latitude received: ${location.lat}`);
       }
-      
+
       return {
         lng,
         lat,
-        formatted_address: data.results[0].formatted_address
+        formatted_address: data.results[0].formatted_address,
       };
-      
     } catch (error) {
       console.error("Geocoding failed:", error);
-      setMessage({ 
-        type: "danger", 
-        text: `Location search failed: ${error.message}` 
+      setMessage({
+        type: "danger",
+        text: `Location search failed: ${error.message}`,
       });
       return null;
     }
@@ -66,7 +79,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       setMessage({ type: "warning", text: "Please enter a destination" });
       return;
     }
-    
+
     setIsLoading(true);
     setMessage(null);
     try {
@@ -82,9 +95,9 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
     } catch (error) {
       setCoordinates(null);
       setIsLocationVerified(false);
-      setMessage({ 
-        type: "danger", 
-        text: error.message || "Failed to find location" 
+      setMessage({
+        type: "danger",
+        text: error.message || "Failed to find location",
       });
     } finally {
       setIsLoading(false);
@@ -93,20 +106,24 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!name.trim()) newErrors.name = "Name is required";
     if (!destination.trim()) newErrors.destination = "Destination is required";
-    
+
     if (!isLocationVerified || !coordinates || coordinates.length !== 2) {
       newErrors.coordinates = "Please verify your location";
-    } else if (coordinates.some(c => c === null || isNaN(c) || typeof c !== 'number')) {
+    } else if (
+      coordinates.some((c) => c === null || isNaN(c) || typeof c !== "number")
+    ) {
       newErrors.coordinates = "Invalid location coordinates";
       console.error("Invalid coordinates detected:", coordinates);
     }
-    
+
     if (!arrivalDate) newErrors.arrivalDate = "Arrival date is required";
-    if (notes.length > 200) newErrors.notes = "Notes must be under 200 characters";
-    if (wants.length > 200) newErrors.wants = "Requests must be under 200 characters";
+    if (notes.length > 200)
+      newErrors.notes = "Notes must be under 200 characters";
+    if (wants.length > 200)
+      newErrors.wants = "Requests must be under 200 characters";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -114,15 +131,15 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    if (!coordinates || coordinates.some(c => c === null || isNaN(c))) {
-      setMessage({ 
-        type: "danger", 
-        text: "System error: Invalid coordinates. Please try again." 
+    if (!coordinates || coordinates.some((c) => c === null || isNaN(c))) {
+      setMessage({
+        type: "danger",
+        text: "System error: Invalid coordinates. Please try again.",
       });
       setIsLocationVerified(false);
       return;
@@ -152,11 +169,11 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       }
 
       const data = await response.json();
-      setMessage({ 
-        type: "success", 
-        text: data.message || "Ride request submitted successfully!" 
+      setMessage({
+        type: "success",
+        text: data.message || "Ride request submitted successfully!",
       });
-      
+
       // Reset form and notify parent component
       setTimeout(() => {
         setName("");
@@ -170,11 +187,12 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
           onRequestCreated(data);
         }
         handleClose();
+        location.reload();
       }, 1500);
     } catch (error) {
-      setMessage({ 
-        type: "danger", 
-        text: error.message || "Failed to submit ride request" 
+      setMessage({
+        type: "danger",
+        text: error.message || "Failed to submit ride request",
       });
     } finally {
       setIsLoading(false);
@@ -188,7 +206,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       </Modal.Header>
       <Modal.Body>
         {message && <Alert variant={message.type}>{message.text}</Alert>}
-        
+
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Your Name</Form.Label>
@@ -221,8 +239,8 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
                 isInvalid={!!errors.destination || !!errors.coordinates}
                 required
               />
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={handleDestinationSearch}
                 disabled={!destination.trim() || isLoading}
                 className="ms-2"
@@ -236,9 +254,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
               </Form.Control.Feedback>
             )}
             {errors.coordinates && (
-              <div className="text-danger small mt-1">
-                {errors.coordinates}
-              </div>
+              <div className="text-danger small mt-1">{errors.coordinates}</div>
             )}
             {coordinates && (
               <div className="mt-2 text-muted small">
@@ -254,7 +270,8 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
               value={arrivalDate}
               onChange={(e) => setArrivalDate(e.target.value)}
               isInvalid={!!errors.arrivalDate}
-              required
+              min={todayString}
+              max={maxDateString}
             />
             <Form.Control.Feedback type="invalid">
               {errors.arrivalDate}
@@ -297,9 +314,9 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
             </Form.Text>
           </Form.Group>
 
-          <Button 
-            type="submit" 
-            variant="primary" 
+          <Button
+            type="submit"
+            variant="primary"
             disabled={isLoading || !isLocationVerified}
             className="w-100 mt-3"
           >

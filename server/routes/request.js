@@ -110,4 +110,33 @@ router.get("/api/requests", verifyToken, async (req, res) => {
   }
 });
 
+// Delete a request
+router.delete("/api/delete-request/:id", verifyToken, async (req, res) => {
+  const userId = req.user.uid;
+  const { id } = req.params; // The ID of the request to delete
+
+  try {
+    // Find the request by ID and check if it belongs to the authenticated user
+    const request = await Request.findOne({ _id: id, userid: userId });
+
+    if (!request) {
+      return res.status(404).json({ error: "Request not found or does not belong to the authenticated user" });
+    }
+
+    // Delete the request
+    await Request.deleteOne({ _id: id });
+
+    res.status(200).json({
+      message: "Request deleted successfully!"
+    });
+  } catch (error) {
+    console.error("Error deleting request:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message
+    });
+  }
+});
+
+
 module.exports = router;

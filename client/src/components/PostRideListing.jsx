@@ -60,6 +60,7 @@ const PostRideListing = ({ show, handleClose }) => {
       if (response.ok) {
         setMessage({ type: "success", text: "Ride offering posted successfully!" });
         handleClose(); // Close modal
+        location.reload();
       } else {
         setMessage({ type: "danger", text: data.error || "Failed to post offering." });
       }

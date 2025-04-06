@@ -1,4 +1,4 @@
-const express = require("express"); 
+const express = require("express");
 const Offering = require("../models/Offering-schema"); // Use the Offering schema here
 const User = require("../models/User-schema");
 const verifyToken = require("../middleware/verifyToken");
@@ -56,6 +56,29 @@ router.get("/api/offerings", verifyToken, async (req, res) => {
     res.json(offerings);
   } catch (error) {
     console.error("Error fetching offerings:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Delete an offering by ID
+router.delete("/api/delete-offering/:id", verifyToken, async (req, res) => {
+  const userId = req.user.uid;
+  const offeringId = req.params.id;
+
+  try {
+    // Ensure the offering exists and belongs to the authenticated user
+    const offering = await Offering.findOne({ _id: offeringId, userid: userId });
+    if (!offering) {
+      return res.status(404).json({ error: "Offering not found or not owned by the user" });
+    }
+
+    // Delete the offering
+    await Offering.deleteOne({ _id: offeringId });
+
+    res.json({ message: "Offering deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting offering:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
