@@ -60,3 +60,6 @@ const UserSchema = new mongoose.Schema({
 
 
 module.exports = mongoose.model('User', UserSchema);
+UserSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 }); // ⏱️ 1 minute for testing
+
+
