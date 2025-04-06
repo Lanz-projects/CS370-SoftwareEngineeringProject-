@@ -21,10 +21,11 @@ function DashboardLayout() {
   const [showNextPopup, setShowNextPopup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewOption, setViewOption] = useState("both");
-  const [viewPostOption, setViewPostOption] = useState("both");
+  const [recentViewOption, setRecentViewOption] = useState("both"); // Renamed for clarity
+  const [yourPostViewOption, setYourPostViewOption] = useState("both"); // Renamed for clarity
   const [mobileView, setMobileView] = useState("recent"); // For mobile toggle: "recent" or "your"
   const [isMobile, setIsMobile] = useState(false); // Check if screen is mobile
+  const [currentUserId, setCurrentUserId] = useState(null); // Add current user ID state
 
   const navigate = useNavigate();
 
@@ -150,6 +151,11 @@ function DashboardLayout() {
         if (userData.user?.acceptedUserAgreement === false) {
           setShowAgreement(true);
         }
+        
+        // Set current user ID
+        if (userData.user) {
+          setCurrentUserId(userData.user.uid);
+        }
       } catch (error) {
         if (error.name !== "AbortError") {
           setError(error.message);
@@ -205,12 +211,12 @@ function DashboardLayout() {
     setShowNextPopup(false);
   };
 
-  const handleViewOptionChange = (option) => {
-    setViewOption(option);
+  const handleRecentViewOptionChange = (option) => {
+    setRecentViewOption(option);
   };
 
-  const handlePostViewOptionChange = (option) => {
-    setViewPostOption(option);
+  const handleYourPostViewOptionChange = (option) => {
+    setYourPostViewOption(option);
   };
 
   const handleMobileViewToggle = (view) => {
@@ -225,25 +231,25 @@ function DashboardLayout() {
     >
       <h3 className="mb-4">Recent Listings</h3>
 
-      <div className="btn-group mb-4" role="group" aria-label="View Options">
+      <div className="btn-group mb-4" role="group" aria-label="Recent View Options">
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewOption === "offerings" ? "active" : ""}`}
-          onClick={() => handleViewOptionChange("offerings")}
+          className={`btn btn-outline-primary ${recentViewOption === "offerings" ? "active" : ""}`}
+          onClick={() => handleRecentViewOptionChange("offerings")}
         >
           Offerings
         </button>
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewOption === "requests" ? "active" : ""}`}
-          onClick={() => handleViewOptionChange("requests")}
+          className={`btn btn-outline-primary ${recentViewOption === "requests" ? "active" : ""}`}
+          onClick={() => handleRecentViewOptionChange("requests")}
         >
           Requests
         </button>
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewOption === "both" ? "active" : ""}`}
-          onClick={() => handleViewOptionChange("both")}
+          className={`btn btn-outline-primary ${recentViewOption === "both" ? "active" : ""}`}
+          onClick={() => handleRecentViewOptionChange("both")}
         >
           Both
         </button>
@@ -255,7 +261,7 @@ function DashboardLayout() {
         <p>Error: {error}</p>
       ) : (
         <div>
-          {viewOption === "offerings" || viewOption === "both" ? (
+          {recentViewOption === "offerings" || recentViewOption === "both" ? (
             <div>
               {offeringList.length > 0 ? (
                 offeringList.map((offering, index) => (
@@ -269,7 +275,7 @@ function DashboardLayout() {
             </div>
           ) : null}
 
-          {viewOption === "requests" || viewOption === "both" ? (
+          {recentViewOption === "requests" || recentViewOption === "both" ? (
             <div>
               {requestList.length > 0 ? (
                 requestList.map((request, index) => (
@@ -295,32 +301,32 @@ function DashboardLayout() {
     >
       <h3 className="mb-4">Your Recent Posts</h3>
 
-      <div className="btn-group mb-4" role="group" aria-label="Post View Options">
+      <div className="btn-group mb-4" role="group" aria-label="Your Post View Options">
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewPostOption === "offerings" ? "active" : ""}`}
-          onClick={() => handlePostViewOptionChange("offerings")}
+          className={`btn btn-outline-primary ${yourPostViewOption === "offerings" ? "active" : ""}`}
+          onClick={() => handleYourPostViewOptionChange("offerings")}
         >
           Your Offerings
         </button>
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewPostOption === "requests" ? "active" : ""}`}
-          onClick={() => handlePostViewOptionChange("requests")}
+          className={`btn btn-outline-primary ${yourPostViewOption === "requests" ? "active" : ""}`}
+          onClick={() => handleYourPostViewOptionChange("requests")}
         >
           Your Requests
         </button>
         <button
           type="button"
-          className={`btn btn-outline-primary ${viewPostOption === "both" ? "active" : ""}`}
-          onClick={() => handlePostViewOptionChange("both")}
+          className={`btn btn-outline-primary ${yourPostViewOption === "both" ? "active" : ""}`}
+          onClick={() => handleYourPostViewOptionChange("both")}
         >
           Both
         </button>
         <button
           type="button"
-          className={`btn btn-outline-warning ${viewPostOption === "favorites" ? "active" : ""}`}
-          onClick={() => handlePostViewOptionChange("favorites")}
+          className={`btn btn-outline-warning ${yourPostViewOption === "favorites" ? "active" : ""}`}
+          onClick={() => handleYourPostViewOptionChange("favorites")}
         >
           Favorites
         </button>
@@ -332,7 +338,7 @@ function DashboardLayout() {
         <p>Error: {error}</p>
       ) : (
         <div>
-          {viewPostOption === "offerings" || viewPostOption === "both" ? (
+          {yourPostViewOption === "offerings" || yourPostViewOption === "both" ? (
             <div>
               {offeringUserList.length > 0 ? (
                 offeringUserList.map((offering, index) => (
@@ -346,7 +352,7 @@ function DashboardLayout() {
             </div>
           ) : null}
 
-          {viewPostOption === "requests" || viewPostOption === "both" ? (
+          {yourPostViewOption === "requests" || yourPostViewOption === "both" ? (
             <div>
               {requestUserList.length > 0 ? (
                 requestUserList.map((request, index) => (
@@ -360,25 +366,44 @@ function DashboardLayout() {
             </div>
           ) : null}
           
-          {viewPostOption === "favorites" ? (
+          {yourPostViewOption === "favorites" ? (
             <div>
               <h5>Your Favorited Offerings</h5>
               {favoriteOfferList.length > 0 ? (
-                favoriteOfferList.map((offering, index) => (
-                  <div className="col-9 mx-auto" key={`fav-offer-${index}`}>
-                    <DashboardOfferingCard offering={offering} userFavorites={favoriteOfferIDList} />
-                  </div>
-                ))
+                favoriteOfferList.map((offering, index) => {
+                  // Check if the current user is the owner of this offering
+                  const isUserOwner = offering.userid === currentUserId;
+                  
+                  return (
+                    <div className="col-9 mx-auto" key={`fav-offer-${index}`}>
+                      {isUserOwner ? (
+                        <DashboardOfferingCard offering={offering} userFavorites={favoriteOfferIDList} />
+                      ) : (
+                        <OfferingCard offering={offering} userFavorites={favoriteOfferIDList} />
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <p>No favorite offerings yet.</p>
               )}
+              
               <h5 className="mt-4">Your Favorited Requests</h5>
               {favoriteRequestList.length > 0 ? (
-                favoriteRequestList.map((request, index) => (
-                  <div className="col-9 mx-auto" key={`fav-request-${index}`}>
-                    <DashboardRequestCard request={request} userFavorites={favoriteRequestIDList} />
-                  </div>
-                ))
+                favoriteRequestList.map((request, index) => {
+                  // Check if the current user is the owner of this request
+                  const isUserOwner = request.userid === currentUserId;
+                  
+                  return (
+                    <div className="col-9 mx-auto" key={`fav-request-${index}`}>
+                      {isUserOwner ? (
+                        <DashboardRequestCard request={request} userFavorites={favoriteRequestIDList} />
+                      ) : (
+                        <RequestCard request={request} userFavorites={favoriteRequestIDList} />
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <p>No favorite requests yet.</p>
               )}

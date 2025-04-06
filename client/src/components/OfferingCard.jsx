@@ -36,8 +36,7 @@ const OfferingCard = ({ offering, userFavorites }) => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        "http://localhost:5000/api/user/favorite-offering",
+      const response = await fetch(url,
         {
           method: "PUT",
           headers: {
