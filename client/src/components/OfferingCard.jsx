@@ -1,40 +1,43 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "react-bootstrap";
 import { Star, Person, People, StarFill } from "react-bootstrap-icons";
-import RequestToRideModal from "./RequestToRideModal"; // import the modal component
+import RequestToRideModal from "./RequestToRideModal";
 
-const OfferingCard = ({ offering, userFavorites }) => {
+const OfferingCard = ({ offering, userFavorites = [] }) => {
   const {
     _id,
     name,
-    location,
+    location = {},
     arrivaldate,
     vehicleid,
     notes,
     userid,
-    maxSeats,
-    waitingList,
-  } = offering; // Fixed destructuring here
+    maxSeats = 0,
+    waitingList = [],
+  } = offering || {};
 
   const [showProfile, setShowProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [quickMessage, setQuickMessage] = useState("");
 
-  const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+  // Extract destination name from location object if available
+  const destination = location?.formattedAddress || 
+                    (location?.coordinates ? 
+                     `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}` : 
+                     "Location not specified");
 
-  // Check if this offering is favorited
-  const isFavoritedStatus = userFavorites.includes(_id);
+  // Check if this offering is favorited with safe default
+  const isFavoritedStatus = Array.isArray(userFavorites) ? userFavorites.includes(_id) : false;
 
-  // URL for the API based on whether the offering is favorited or not
-  const url = isFavoritedStatus
-    ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
-    : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
-
-  //  Favorite handler
+  // Favorite handler
   const handleFavorite = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No authentication token found");
+        return;
+      }
 
       const response = await fetch(url,
         {
@@ -63,10 +66,13 @@ const OfferingCard = ({ offering, userFavorites }) => {
     }
   };
 
-  // 👤 Fetch profile modal
+  // Fetch profile modal
   const fetchUserProfile = async () => {
     try {
       const response = await fetch(`/api/offering/${offering._id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.offering) {
         setUserProfile(data.offering.user);
@@ -77,12 +83,9 @@ const OfferingCard = ({ offering, userFavorites }) => {
     }
   };
 
-  const handleConfirm = () => {
-    console.log("Confirmed with message:", quickMessage);
-    // Add logic here to send message to backend if needed
-    setShowRequestModal(false);
-    setQuickMessage("");
-  };
+  if (!offering) {
+    return <Card className="mb-3 p-3">No offering data available</Card>;
+  }
 
   return (
     <>
@@ -117,7 +120,7 @@ const OfferingCard = ({ offering, userFavorites }) => {
           </Card.Subtitle>
           <Card.Text>
             <strong>Location: </strong>
-            {locationString}
+            {destination}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>
@@ -143,15 +146,14 @@ const OfferingCard = ({ offering, userFavorites }) => {
             variant="primary"
             className="w-100"
             onClick={() => setShowRequestModal(true)}
-            disabled={maxSeats === 0} // Disable button if seats are 0
+            disabled={maxSeats === 0}
           >
-            {maxSeats === 0 ? "No Seats Available" : "Request to Ride"}{" "}
-            {/* Change text if no seats */}
+            {maxSeats === 0 ? "No Seats Available" : "Request to Ride"}
           </Button>
         </Card.Footer>
       </Card>
 
-      {/* 👤 Profile Modal */}
+      {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -161,19 +163,16 @@ const OfferingCard = ({ offering, userFavorites }) => {
         <Modal.Body>
           {userProfile ? (
             <>
-              {/* Name */}
               <div className="mb-2 p-2 border rounded">
                 <div className="fw-bold mb-1">Name</div>
                 <div>{userProfile.name}</div>
               </div>
 
-              {/* Email */}
               <div className="mb-2 p-2 border rounded">
                 <div className="fw-bold mb-1">Email</div>
                 <div>{userProfile.email}</div>
               </div>
 
-              {/* Contact Info */}
               <div className="mb-2 p-2 border rounded">
                 <div className="fw-bold mb-1">Contact</div>
                 {userProfile.contactInfo?.length ? (
@@ -189,7 +188,6 @@ const OfferingCard = ({ offering, userFavorites }) => {
                 )}
               </div>
 
-              {/* Vehicle Info */}
               <div className="mb-2 p-2 border rounded">
                 <div className="fw-bold mb-1">Vehicle Info</div>
                 <div>
@@ -210,7 +208,6 @@ const OfferingCard = ({ offering, userFavorites }) => {
         </Modal.Footer>
       </Modal>
 
-      {/* Request to Ride Modal */}
       <RequestToRideModal
         show={showRequestModal}
         handleClose={() => setShowRequestModal(false)}

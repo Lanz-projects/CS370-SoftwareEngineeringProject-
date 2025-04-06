@@ -10,10 +10,11 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   
-  const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+  // Extract destination name from location object if available
+  const destination = location?.formattedAddress || `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
 
-  // Check if this offering is favorited
-  const isFavoritedStatus = userFavorites.includes(_id);
+  // Check if this request is favorited
+  const isFavoritedStatus = userFavorites?.includes(_id) || false;
   
   // Check if request is already accepted
   const isAccepted = !!userAccepted;
@@ -55,7 +56,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   // Function to fetch user profile
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/request/${_id}`);
+      const response = await fetch(`http://localhost:5000/api/request/${_id}`);
       const data = await response.json();
       if (data.request) {
         setUserProfile(data.request.user);
@@ -71,31 +72,26 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
     try {
       const token = localStorage.getItem("token");
 
-      // URL for the API based on whether the offering is favorited or not
       const url = isFavoritedStatus
         ? "http://localhost:5000/api/user/remove-favorite"
         : "http://localhost:5000/api/user/favorite-request";
 
-      const response = await fetch(
-        url,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requestId: _id,
-            type: "request", 
-          }),
-        }
-      );
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requestId: _id,
+          type: "request", 
+        }),
+      });
 
       const data = await response.json();
       if (response.ok) {
         console.log("Request favorite status updated:", data.message);
         if (onAcceptComplete) onAcceptComplete(); 
-        window.location.reload();
       } else {
         console.error("Error updating favorite status:", data.error);
       }
@@ -104,22 +100,21 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
     }
   };
 
-  // Handle the "Accept" button click to show confirmation modal
+  // Handle the "Accept" button click
   const handleAccept = () => {
     setShowConfirmation(true);
   };
 
-  // Handle the "Unaccept" button click to show unaccept confirmation modal
+  // Handle the "Unaccept" button click
   const handleUnaccept = () => {
     setShowUnacceptConfirmation(true);
   };
 
-  // Handle the "Confirm" button click to accept the request and add to favorites
+  // Handle the "Confirm" button click to accept the request
   const handleConfirm = async () => {
     try {
       const token = localStorage.getItem("token");
       
-      // Update the request to mark it as accepted
       const acceptResponse = await fetch(
         `http://localhost:5000/api/accept-request/${_id}`,
         {
@@ -134,7 +129,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       const acceptData = await acceptResponse.json();
       
       if (acceptResponse.ok) {
-        // Add to favorites if not already favorited
         if (!isFavoritedStatus) {
           await fetch(
             "http://localhost:5000/api/user/favorite-request",
@@ -153,16 +147,8 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         }
         
         console.log("Request accepted successfully:", acceptData.message);
-        
-        // Close confirmation modal
         setShowConfirmation(false);
-        
-        // Notify parent component to refresh data
-        if (onAcceptComplete) {
-          onAcceptComplete();
-        };
-
-        window.location.reload();
+        if (onAcceptComplete) onAcceptComplete();
       } else {
         console.error("Error accepting request:", acceptData.error);
         setShowConfirmation(false);
@@ -178,7 +164,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
     try {
       const token = localStorage.getItem("token");
       
-      // Update the request to remove acceptance
       const unacceptResponse = await fetch(
         `http://localhost:5000/api/unaccept-request/${_id}`,
         {
@@ -193,7 +178,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       const unacceptData = await unacceptResponse.json();
       
       if (unacceptResponse.ok) {
-        // Remove from favorites if currently favorited
         if (isFavoritedStatus) {
           await fetch(
             "http://localhost:5000/api/user/remove-favorite",
@@ -209,15 +193,10 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
               }),
             }
           );
-          window.location.reload();
         }
         
         console.log("Request unaccepted successfully:", unacceptData.message);
-        
-        // Close unaccept confirmation modal
         setShowUnacceptConfirmation(false);
-        
-        // Notify parent component to refresh data
         if (onAcceptComplete) onAcceptComplete();
       } else {
         console.error("Error unaccepting request:", unacceptData.error);
@@ -262,7 +241,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           </Card.Subtitle>
           <Card.Text>
             <strong>Location: </strong>
-            {locationString}
+            {destination}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>

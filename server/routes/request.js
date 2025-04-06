@@ -4,12 +4,11 @@ const User = require("../models/User-schema.js");
 const verifyToken = require("../middleware/verifyToken");
 const mongoose = require("mongoose");
 
-
 const router = express.Router();
 
 // Create a new request
 router.post("/api/create-request", verifyToken, async (req, res) => {
-  const { name, latitude, longitude, arrivaldate, notes, wants } = req.body;
+  const { name, latitude, longitude, arrivaldate, notes, wants, formattedAddress } = req.body;
   const userId = req.user.uid;
 
   // Validate required fields
@@ -52,7 +51,8 @@ router.post("/api/create-request", verifyToken, async (req, res) => {
       name,
       location: {
         type: "Point",
-        coordinates: [lng, lat], // GeoJSON format: [longitude, latitude]
+        coordinates: [lng, lat],
+        formattedAddress
       },
       arrivaldate: new Date(arrivaldate),
       notes: notes || "",
@@ -152,7 +152,6 @@ router.delete("/api/delete-request/:id", verifyToken, async (req, res) => {
   }
 });
 
-
 // Accept request endpoint
 router.put("/api/accept-request/:id", verifyToken, async (req, res) => {
   const requestId = req.params.id;
@@ -242,6 +241,5 @@ router.put("/api/unaccept-request/:id", verifyToken, async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
