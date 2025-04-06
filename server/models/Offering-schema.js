@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const offeringSchema = new Schema({
     userid: {
         type: String,
-        ref: 'User',  // Foreign key reference to User schema
+        ref: 'User',
         required: true
     },
     name: {
@@ -14,13 +14,24 @@ const offeringSchema = new Schema({
     location: {
         type: {
             type: String,
-            enum: ['Point'], // GeoJSON type must be 'Point'
+            enum: ['Point'],
             required: true
         },
         coordinates: {
-            type: [Number], // [longitude, latitude]
-            required: true
-        }
+            type: [Number],
+            required: true,
+            validate: {
+                validator: function(coords) {
+                    return coords.length === 2 && 
+                           !isNaN(coords[0]) && 
+                           !isNaN(coords[1]) &&
+                           typeof coords[0] === 'number' &&
+                           typeof coords[1] === 'number';
+                },
+                message: 'Coordinates must be an array of two valid numbers [longitude, latitude]'
+            }
+        },
+        formattedAddress: String
     },
     arrivaldate: {
         type: Date,
@@ -32,23 +43,24 @@ const offeringSchema = new Schema({
     },
     notes: {
         type: String,
-        required: true
+        default: ""
     },
     maxSeats: {
         type: Number,
         required: true,
-        min: 0 // Ensures maxSeats is at least 1
+        min: 1 // Ensures maxSeats is at least 1
     },
     originalMaxSeats: {
         type: Number,
-      },
+        required: true
+    },
     waitingList: {
-        type: [String], // Array of strings (user IDs)
-        default: [] // Default to an empty array
+        type: [String], // Array of user IDs
+        default: []
     },
     acceptedUsers: {
-        type: [String], // Array of strings (user IDs)
-        default: [] // Default to an empty array
+        type: [String], // Array of user IDs
+        default: []
     },
     quickMessage: [{
         message: {
@@ -57,13 +69,16 @@ const offeringSchema = new Schema({
         },
         userid: {
             type: String,
-            ref: 'User',  // Foreign key reference to User schema
             required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
         }
-    }],
+    }]
 }, { timestamps: true });
 
-// Add a geospatial index for efficient querying
+// Add geospatial index for location-based queries
 offeringSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Offering', offeringSchema);

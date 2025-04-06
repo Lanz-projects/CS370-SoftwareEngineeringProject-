@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const requestSchema = new Schema({
     userid: {
         type: String,
-        ref: 'User',  // Foreign key reference to User schema
+        ref: 'User',
         required: true
     },
     name: {
@@ -14,13 +14,14 @@ const requestSchema = new Schema({
     location: {
         type: {
             type: String,
-            enum: ['Point'], // Must be a GeoJSON Point
+            enum: ['Point'],
             required: true
         },
         coordinates: {
-            type: [Number], // [longitude, latitude]
+            type: [Number],
             required: true
-        }
+        },
+        formattedAddress: String // Add this line
     },
     arrivaldate: {
         type: Date,
@@ -32,15 +33,13 @@ const requestSchema = new Schema({
     },
     wants: {
         type: String,
-        default: "" // Section for additional "wants" notes
+        default: ""
     },
     userAccepted: {
         type: String
     }
 }, { timestamps: true });
 
-// Add geospatial index for efficient location-based queries
 requestSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Request', requestSchema);
-    
