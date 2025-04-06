@@ -132,28 +132,42 @@ const RideListingLayout = () => {
 
       {/* Ride Listings Section (30%) */}
       <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3 d-flex flex-column">
+        
+        {/* Themed Buttons: Request, Post, Filter */}
         <div className="d-flex justify-content-between mb-4">
           <button
-            className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
+            className="btn rounded-pill me-2 flex-grow-1"
             onClick={() => setShowRequestRideModal(true)}
             style={{
-              backgroundColor: "black",
-              color: "#510b76",
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
               border: "none",
             }}
           >
             Request a Ride
           </button>
+
           <button
-            className="btn btn-light text-white rounded-pill flex-grow-1 ms-2"
+            className="btn rounded-pill me-2 flex-grow-1"
             onClick={() => setShowPostRideListingModal(true)}
             style={{
-              backgroundColor: "black",
-              color: "#510b76",
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
               border: "none",
             }}
           >
             Post a Ride Listing
+          </button>
+
+          <button
+            className="btn rounded-pill flex-grow-1"
+            style={{
+              backgroundColor: "#b08fd8",
+              color: "#ffffff",
+              border: "none",
+            }}
+          >
+            ☰ Filter
           </button>
         </div>
 

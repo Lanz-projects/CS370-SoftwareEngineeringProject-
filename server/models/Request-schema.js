@@ -33,6 +33,19 @@ const requestSchema = new Schema({
     wants: {
         type: String,
         default: "" // Section for additional "wants" notes
+    },
+    maxSeats: {
+        type: Number,
+        required: true,
+        min: 1 // Ensures maxSeats is at least 1
+    },
+    waitingList: {
+        type: [String], // Array of strings (user IDs)
+        default: [] // Default to an empty array
+    },
+    acceptedUsers: {
+        type: [String], // Array of strings (user IDs)
+        default: [] // Default to an empty array
     }
 }, { timestamps: true });
 
@@ -40,3 +53,4 @@ const requestSchema = new Schema({
 requestSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Request', requestSchema);
+    

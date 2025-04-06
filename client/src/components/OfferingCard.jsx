@@ -1,22 +1,35 @@
 import React, { useState } from "react";
 import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person, StarFill } from "react-bootstrap-icons";
+import { Star, Person, People, StarFill } from "react-bootstrap-icons";
+import RequestToRideModal from "./RequestToRideModal"; // import the modal component
 
 const OfferingCard = ({ offering, userFavorites }) => {
-  const { name, location, arrivaldate, vehicleid, notes, userid, _id } =
-    offering;
+  const {
+    _id,
+    name,
+    location,
+    arrivaldate,
+    vehicleid,
+    notes,
+    userid,
+    maxSeats,
+    waitingList,
+  } = offering; // Fixed destructuring here
+
   const [showProfile, setShowProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [quickMessage, setQuickMessage] = useState("");
 
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
 
   // Check if this offering is favorited
-  const isFavoritedStatus = userFavorites.includes(_id); 
+  const isFavoritedStatus = userFavorites.includes(_id);
 
   // URL for the API based on whether the offering is favorited or not
   const url = isFavoritedStatus
-  ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
-  : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
+    ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
+    : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
 
   //  Favorite handler
   const handleFavorite = async () => {
@@ -64,6 +77,13 @@ const OfferingCard = ({ offering, userFavorites }) => {
     }
   };
 
+  const handleConfirm = () => {
+    console.log("Confirmed with message:", quickMessage);
+    // Add logic here to send message to backend if needed
+    setShowRequestModal(false);
+    setQuickMessage("");
+  };
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -107,10 +127,23 @@ const OfferingCard = ({ offering, userFavorites }) => {
             <strong>Notes: </strong>
             {notes || "No additional notes."}
           </Card.Text>
+
+          <Card.Text className="d-flex align-items-center mb-1">
+            <Person className="me-2" />
+            <strong>Available Seats: {maxSeats}</strong>
+          </Card.Text>
+          <Card.Text className="d-flex align-items-center">
+            <People className="me-2" />
+            <strong>Wait List: {waitingList.length}</strong>
+          </Card.Text>
         </Card.Body>
 
         <Card.Footer className="bg-white border-0 text-center">
-          <Button variant="primary" className="w-100">
+          <Button
+            variant="primary"
+            className="w-100"
+            onClick={() => setShowRequestModal(true)}
+          >
             Request to Ride
           </Button>
         </Card.Footer>
@@ -174,6 +207,15 @@ const OfferingCard = ({ offering, userFavorites }) => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Request to Ride Modal */}
+      <RequestToRideModal
+        show={showRequestModal}
+        handleClose={() => setShowRequestModal(false)}
+        quickMessage={quickMessage}
+        setQuickMessage={setQuickMessage}
+        offeringId={_id}
+      />
     </>
   );
 };
