@@ -1,16 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const FilterModal = ({ show, handleClose, setFilterOptions }) => {
-  const [showOfferings, setShowOfferings] = useState(true);
-  const [showRequests, setShowRequests] = useState(true);
-  const [sortBy, setSortBy] = useState('default'); // Add sorting state
+const FilterModal = ({ 
+  show, 
+  handleClose, 
+  filterOptions = {}, 
+  setFilterOptions, 
+  favoriteOfferIDList = [], 
+  favoriteRequestIDList = [] 
+}) => {
+  const [showOfferings, setShowOfferings] = useState(filterOptions.showOfferings || true);
+  const [showRequests, setShowRequests] = useState(filterOptions.showRequests || true);
+  const [sortBy, setSortBy] = useState(filterOptions.sortBy || "default");
+  const [showFavorites, setShowFavorites] = useState(filterOptions.showFavorites || false);
+  const [hasFavorites, setHasFavorites] = useState(false);
+
+  useEffect(() => {
+    const hasFavs = (favoriteOfferIDList?.length || 0) > 0 || 
+                   (favoriteRequestIDList?.length || 0) > 0;
+    setHasFavorites(hasFavs);
+    
+    if (!hasFavs && showFavorites) {
+      setShowFavorites(false);
+    }
+  }, [favoriteOfferIDList, favoriteRequestIDList, showFavorites]);
 
   const handleApply = () => {
     setFilterOptions({
       showOfferings,
       showRequests,
-      sortBy // Include sort option in filter settings
+      sortBy,
+      showFavorites: hasFavorites ? showFavorites : false
     });
     handleClose();
   };
@@ -37,8 +57,22 @@ const FilterModal = ({ show, handleClose, setFilterOptions }) => {
               onChange={(e) => setShowRequests(e.target.checked)}
             />
           </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Check 
+              type="checkbox" 
+              label="Show Favorites Only" 
+              checked={hasFavorites && showFavorites}
+              onChange={(e) => setShowFavorites(e.target.checked)}
+              disabled={!hasFavorites}
+            />
+            {!hasFavorites && (
+              <Form.Text className="text-muted">
+                You don't have any favorites yet.
+              </Form.Text>
+            )}
+          </Form.Group>
           
-          {/* Add sorting options */}
           <Form.Group className="mb-3">
             <Form.Label>Sort By</Form.Label>
             <Form.Select 
