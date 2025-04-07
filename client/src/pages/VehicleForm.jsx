@@ -4,7 +4,6 @@ function VehicleForm() {
 return(
   <div>
     <Navigationbar></Navigationbar>
-    <h1>Welcome to Vehicle Form</h1>
     <VehicleFormInput></VehicleFormInput>
   </div>
 );

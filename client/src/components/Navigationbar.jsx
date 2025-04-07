@@ -33,8 +33,8 @@ function Navigationbar() {
                 <Nav.Link onClick = {() => handleLogout(navigate)} className = {styles.customNavLink}>Logout</Nav.Link>
                 
                 {/* Temp Navigation to Get to ExtraUserForm and VehicleInputForm */}
-                <Nav.Link as = {Link} to = "/extra-userinfo-form" className = {styles.customNavLink}>Extra User Form</Nav.Link>
-                <Nav.Link as = {Link} to = "/vehicleform" className = {styles.customNavLink}>Vehicle</Nav.Link>
+                {/*<Nav.Link as = {Link} to = "/extra-userinfo-form" className = {styles.customNavLink}>Extra User Form</Nav.Link>
+                <Nav.Link as = {Link} to = "/vehicleform" className = {styles.customNavLink}>Vehicle</Nav.Link> */}
                 
               </>
             )}
