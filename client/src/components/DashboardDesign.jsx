@@ -200,12 +200,8 @@ function DashboardLayout() {
 
   const handleRecentViewOptionChange = (option) => {
     setRecentViewOption(option);
-  const handleRecentViewOptionChange = (option) => {
-    setRecentViewOption(option);
   };
 
-  const handleYourPostViewOptionChange = (option) => {
-    setYourPostViewOption(option);
   const handleYourPostViewOptionChange = (option) => {
     setYourPostViewOption(option);
   };
