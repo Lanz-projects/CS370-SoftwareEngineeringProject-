@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useMemo } from "react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 
 const containerStyle = {
@@ -6,21 +6,27 @@ const containerStyle = {
   height: "100%",
 };
 
+// Truman State University coordinates
 const center = {
-  lat: 40.1934,
-  lng: -92.5829,
+  lat: 40.1885,
+  lng: -92.5833,
 };
 
-const Map = ({ offerings = [], requests = [] }) => {
+const Map = ({ offerings = [], requests = [], onMarkerClick, selectedMarkerId }) => {
   const mapRef = useRef(null);
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  });
+  
+  // Memoize the loader options to prevent re-creation on every render
+  const loaderOptions = useMemo(() => ({
+    id: 'google-map-script',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyDLLZQYqM5iZ0WqouJ8xDqL4wURjagfm4s',
+    libraries: ['places'],
+  }), []);
+
+  const { isLoaded, loadError } = useJsApiLoader(loaderOptions);
 
   const onLoad = useCallback((map) => {
-    const bounds = new window.google.maps.LatLngBounds();
     mapRef.current = map;
-    
+    const bounds = new window.google.maps.LatLngBounds();
     bounds.extend(center);
     
     offerings.forEach(offering => {
@@ -49,7 +55,23 @@ const Map = ({ offerings = [], requests = [] }) => {
     }
   }, [offerings, requests]);
 
-  if (!isLoaded) return <div>Loading map...</div>;
+  // Define pin icons
+  const pinConfig = {
+    path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeWeight: 1,
+    scale: 1.5,
+    anchor: { x: 12, y: 24 },
+  };
+
+  if (loadError) {
+    return <div className="text-danger">Error loading Google Maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div className="text-muted">Loading Google Maps...</div>;
+  }
 
   return (
     <GoogleMap 
@@ -57,8 +79,21 @@ const Map = ({ offerings = [], requests = [] }) => {
       center={center} 
       zoom={12} 
       onLoad={onLoad}
+      options={{
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: false,
+      }}
     >
-      <Marker position={center} />
+      <Marker 
+        position={center} 
+        title="Truman State University"
+        icon={{
+          ...pinConfig,
+          fillColor: "#510b76"
+        }}
+        zIndex={1000}
+      />
       
       {offerings.map((offering) => {
         if (!offering.location?.coordinates) return null;
@@ -70,6 +105,12 @@ const Map = ({ offerings = [], requests = [] }) => {
               lng: offering.location.coordinates[0],
             }}
             title={`Offering from ${offering.name}`}
+            icon={{
+              ...pinConfig,
+              fillColor: "#4285F4"
+            }}
+            onClick={() => onMarkerClick(`offering-${offering._id}`)}
+            zIndex={selectedMarkerId === `offering-${offering._id}` ? 1000 : 1}
           />
         );
       })}
@@ -84,6 +125,12 @@ const Map = ({ offerings = [], requests = [] }) => {
               lng: request.location.coordinates[0],
             }}
             title={`Request from ${request.name}`}
+            icon={{
+              ...pinConfig,
+              fillColor: "#0F9D58"
+            }}
+            onClick={() => onMarkerClick(`request-${request._id}`)}
+            zIndex={selectedMarkerId === `request-${request._id}` ? 1000 : 1}
           />
         );
       })}
