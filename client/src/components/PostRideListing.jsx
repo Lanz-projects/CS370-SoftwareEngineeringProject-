@@ -105,7 +105,13 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!name.trim()) newErrors.name = "Name is required";
+    // Add name validation to only allow letters and spaces
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+      newErrors.name = "Name can only contain letters and spaces";
+    }
+    
     if (!destination.trim()) newErrors.destination = "Destination is required";
     
     if (!isLocationVerified || !coordinates || coordinates.length !== 2) {
@@ -115,9 +121,17 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
       console.error("Invalid coordinates detected:", coordinates);
     }
     
-    if (!arrivalDate) newErrors.arrivalDate = "Arrival date is required";
-    else if (new Date(arrivalDate) < today) newErrors.arrivalDate = "Arrival date cannot be in the past";
-    else if (new Date(arrivalDate) > maxDate) newErrors.arrivalDate = "Arrival date cannot be more than one month ahead";
+    if (!arrivalDate) {
+      newErrors.arrivalDate = "Arrival date is required";
+    } else if (new Date(arrivalDate) < today) {
+      // Updated error message for today's date
+      newErrors.arrivalDate = new Date(arrivalDate).toDateString() === today.toDateString() 
+        ? "Please choose tomorrow or later" 
+        : "Arrival date cannot be in the past";
+    } else if (new Date(arrivalDate) > maxDate) {
+      newErrors.arrivalDate = "Arrival date cannot be more than one month ahead";
+    }
+    
     if (notes.length > 200) newErrors.notes = "Notes must be under 200 characters";
     if (!availableSeats || availableSeats <= 0) newErrors.availableSeats = "Available seats must be at least 1";
 

@@ -197,9 +197,14 @@ function UserProfileUpdate() {
           {emailError && <div className="text-danger">{emailError}</div>} 
         </div>
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
-          Add Contact Info
-        </button>
+        <div className="d-flex gap-2 mt-3">
+          <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
+            Add Contact Info
+          </button>
+          <button type="submit" className="btn btn-primary">
+            Save Changes
+          </button>
+        </div>
 
         <div className="mt-4">
           <h4>Added Contact Info:</h4>
@@ -213,7 +218,6 @@ function UserProfileUpdate() {
           </ul>
         </div>
 
-        <button type="submit" className="btn btn-primary mt-3">Save Changes</button>
       </form>
     </div>
   );

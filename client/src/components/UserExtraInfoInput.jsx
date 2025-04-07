@@ -158,7 +158,7 @@ function UserExtraInfoInput() {
               onChange={(e) => setPlatform(e.target.value)}
               id="socialPlatform"
             >
-              <option value="">Select a Platform</option> {/* Default empty selection */}
+              <option value="">Select a Platform</option>
               {["Twitter", "Instagram", "Snapchat", "TikTok", "GroupMe",
                 "Discord", "WhatsApp", "Messenger", "Facebook", "Other"].map((plat) => (
                 <option key={plat} value={plat}>{plat}</option>
@@ -182,9 +182,12 @@ function UserExtraInfoInput() {
           {emailError && <div className="text-danger">{emailError}</div>} 
         </div>
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
-          Add Contact Info
-        </button>
+        <div className="d-flex gap-2">
+          <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
+            Add Contact Info
+          </button>
+          <button type="submit" className="btn btn-primary">Save</button>
+        </div>
 
         <div className="mt-4">
           <h4>Added Contact Info:</h4>
@@ -198,7 +201,6 @@ function UserExtraInfoInput() {
           </ul>
         </div>
 
-        <button type="submit" className="btn btn-primary mt-3">Save</button>
       </form>
     </div>
   );

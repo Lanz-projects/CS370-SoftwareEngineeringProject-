@@ -139,7 +139,6 @@ function DashboardLayout() {
           setShowAgreement(true);
         }
         
-        // Set current user ID
         if (userData.user) {
           setCurrentUserId(userData.user.uid);
         }
@@ -356,9 +355,7 @@ function DashboardLayout() {
               <h5>Your Favorited Offerings</h5>
               {favoriteOfferList.length > 0 ? (
                 favoriteOfferList.map((offering, index) => {
-                  // Check if the current user is the owner of this offering
                   const isUserOwner = offering.userid === currentUserId;
-                  
                   return (
                     <div className="col-9 mx-auto" key={`fav-offer-${index}`}>
                       {isUserOwner ? (
@@ -373,24 +370,22 @@ function DashboardLayout() {
                 <p>No favorite offerings yet.</p>
               )}
               
-              <h5 className="mt-4">Your Favorited Requests</h5>
-              {favoriteRequestList.length > 0 ? (
-                favoriteRequestList.map((request, index) => {
-                  // Check if the current user is the owner of this request
-                  const isUserOwner = request.userid === currentUserId;
-                  
-                  return (
-                    <div className="col-9 mx-auto" key={`fav-request-${index}`}>
-                      {isUserOwner ? (
-                        <DashboardRequestCard request={request} userFavorites={favoriteRequestIDList} />
-                      ) : (
-                        <RequestCard request={request} userFavorites={favoriteRequestIDList} />
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <p>No favorite requests yet.</p>
+              {favoriteRequestList.length > 0 && (
+                <>
+                  <h5 className="mt-4">Your Favorited Requests</h5>
+                  {favoriteRequestList.map((request, index) => {
+                    const isUserOwner = request.userid === currentUserId;
+                    return (
+                      <div className="col-9 mx-auto" key={`fav-request-${index}`}>
+                        {isUserOwner ? (
+                          <DashboardRequestCard request={request} userFavorites={favoriteRequestIDList} />
+                        ) : (
+                          <RequestCard request={request} userFavorites={favoriteRequestIDList} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
               )}
             </div>
           )}

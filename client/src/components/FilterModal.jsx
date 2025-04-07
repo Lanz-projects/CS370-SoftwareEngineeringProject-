@@ -43,38 +43,41 @@ const FilterModal = ({
       <Modal.Body>
         <Form>
           <Form.Group className="mb-3">
-            <Form.Label>Listing Types</Form.Label>
-            <Form.Check 
-              type="checkbox" 
-              label="Show Ride Offerings" 
-              checked={showOfferings}
-              onChange={(e) => setShowOfferings(e.target.checked)}
-            />
-            <Form.Check 
-              type="checkbox" 
-              label="Show Ride Requests" 
-              checked={showRequests}
-              onChange={(e) => setShowRequests(e.target.checked)}
-            />
+            <Form.Label><strong>Listing Types</strong></Form.Label>
+            <div className="mb-2">
+              <Form.Check 
+                type="checkbox" 
+                label="Show Ride Offerings" 
+                checked={showOfferings}
+                onChange={(e) => setShowOfferings(e.target.checked)}
+              />
+            </div>
+            <div className="mb-2">
+              <Form.Check 
+                type="checkbox" 
+                label="Show Ride Requests" 
+                checked={showRequests}
+                onChange={(e) => setShowRequests(e.target.checked)}
+              />
+            </div>
+            <div>
+              <Form.Check 
+                type="checkbox" 
+                label="Show Favorites Only" 
+                checked={hasFavorites && showFavorites}
+                onChange={(e) => setShowFavorites(e.target.checked)}
+                disabled={!hasFavorites}
+              />
+              {!hasFavorites && (
+                <Form.Text className="text-muted">
+                  You don't have any favorites yet.
+                </Form.Text>
+              )}
+            </div>
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Check 
-              type="checkbox" 
-              label="Show Favorites Only" 
-              checked={hasFavorites && showFavorites}
-              onChange={(e) => setShowFavorites(e.target.checked)}
-              disabled={!hasFavorites}
-            />
-            {!hasFavorites && (
-              <Form.Text className="text-muted">
-                You don't have any favorites yet.
-              </Form.Text>
-            )}
-          </Form.Group>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Sort By</Form.Label>
+            <Form.Label><strong>Sort By</strong></Form.Label>
             <Form.Select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -94,8 +97,8 @@ const FilterModal = ({
           variant="primary" 
           onClick={handleApply}
           style={{
-            backgroundColor: "#b08fd8",
-            borderColor: "#b08fd8"
+            backgroundColor: "#510b76",
+            borderColor: "#510b76"
           }}
         >
           Apply Filters
