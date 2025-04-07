@@ -22,13 +22,16 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
   const [quickMessage, setQuickMessage] = useState("");
 
   // Extract destination name from location object if available
-  const destination = location?.formattedAddress || 
-                    (location?.coordinates ? 
-                     `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}` : 
-                     "Location not specified");
+  const destination =
+    location?.formattedAddress ||
+    (location?.coordinates
+      ? `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`
+      : "Location not specified");
 
   // Check if this offering is favorited with safe default
-  const isFavoritedStatus = Array.isArray(userFavorites) ? userFavorites.includes(_id) : false;
+  const isFavoritedStatus = Array.isArray(userFavorites)
+    ? userFavorites.includes(_id)
+    : false;
 
   // Favorite handler
   const handleFavorite = async () => {
@@ -39,19 +42,22 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
         return;
       }
 
-      const response = await fetch(url,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            offeringId: _id,
-            type: "offering",
-          }),
-        }
-      );
+      // URL for the API based on whether the offering is favorited or not
+      const url = isFavoritedStatus
+        ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
+        : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offeringId: _id,
+          type: "offering",
+        }),
+      });
 
       const data = await response.json();
 
