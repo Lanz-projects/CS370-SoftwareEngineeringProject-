@@ -48,7 +48,7 @@ const offeringSchema = new Schema({
     maxSeats: {
         type: Number,
         required: true,
-        min: 1 // Ensures maxSeats is at least 1
+        min: 0 // Ensures maxSeats is at least 1
     },
     originalMaxSeats: {
         type: Number,

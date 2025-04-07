@@ -7,7 +7,6 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
   const [coordinates, setCoordinates] = useState(null);
   const [formattedAddress, setFormattedAddress] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
-  const [vehicleId, setVehicleId] = useState("");
   const [notes, setNotes] = useState("");
   const [availableSeats, setAvailableSeats] = useState("");
   const [errors, setErrors] = useState({});
@@ -119,8 +118,6 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
     if (!arrivalDate) newErrors.arrivalDate = "Arrival date is required";
     else if (new Date(arrivalDate) < today) newErrors.arrivalDate = "Arrival date cannot be in the past";
     else if (new Date(arrivalDate) > maxDate) newErrors.arrivalDate = "Arrival date cannot be more than one month ahead";
-    
-    if (!vehicleId.trim()) newErrors.vehicleId = "Vehicle ID is required";
     if (notes.length > 200) newErrors.notes = "Notes must be under 200 characters";
     if (!availableSeats || availableSeats <= 0) newErrors.availableSeats = "Available seats must be at least 1";
 
@@ -151,7 +148,6 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
       longitude: coordinates[0],
       latitude: coordinates[1],
       arrivaldate: new Date(arrivalDate).toISOString(),
-      vehicleid: vehicleId,
       notes: notes || "",
       formattedAddress,
       maxSeats: parseInt(availableSeats, 10)
@@ -186,7 +182,6 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
         setCoordinates(null);
         setFormattedAddress("");
         setArrivalDate("");
-        setVehicleId("");
         setNotes("");
         setAvailableSeats("");
         setIsLocationVerified(false);
@@ -272,20 +267,6 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
             )}
           </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Vehicle ID</Form.Label>
-            <Form.Control
-              type="text"
-              value={vehicleId}
-              onChange={(e) => setVehicleId(e.target.value)}
-              placeholder="Enter your vehicle ID"
-              isInvalid={!!errors.vehicleId}
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.vehicleId}
-            </Form.Control.Feedback>
-          </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>Arrival Date</Form.Label>

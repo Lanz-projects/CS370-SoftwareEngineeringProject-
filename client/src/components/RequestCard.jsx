@@ -144,6 +144,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
               }),
             }
           );
+          window.location.reload();
         }
         
         console.log("Request accepted successfully:", acceptData.message);
@@ -193,6 +194,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
               }),
             }
           );
+          window.location.reload();
         }
         
         console.log("Request unaccepted successfully:", unacceptData.message);

@@ -13,6 +13,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     notes,
     userid,
     maxSeats = 0,
+    originalMaxSeats,
     waitingList = [],
   } = offering || {};
 
@@ -139,7 +140,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
 
           <Card.Text className="d-flex align-items-center mb-1">
             <Person className="me-2" />
-            <strong>Available Seats: {maxSeats}</strong>
+            <strong>Available Seats: {maxSeats} / {originalMaxSeats} </strong>
           </Card.Text>
           <Card.Text className="d-flex align-items-center">
             <People className="me-2" />
