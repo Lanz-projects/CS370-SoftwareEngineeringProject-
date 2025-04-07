@@ -1,0 +1,42 @@
+/* RideListingLayout.css */
+.selected-card {
+    border: 3px solid #510b76;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(81, 11, 118, 0.7);
+    transition: all 0.3s ease;
+    transform: scale(1.02);
+    margin: -3px; /* Compensate for border */
+    background-color: rgba(81, 11, 118, 0.05);
+  }
+  
+  .highlight-card {
+    animation: pulse 2s;
+    position: relative;
+    z-index: 10;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(81, 11, 118, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 15px rgba(81, 11, 118, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(81, 11, 118, 0);
+    }
+  }
+  
+  .overflow-auto {
+    scroll-behavior: smooth;
+  }
+  
+  .container-fluid.d-flex.vh-100.p-0 {
+    position: relative;
+  }
+  
+  @media (max-width: 767.98px) {
+    .selected-card {
+      transform: scale(1.01);
+    }
+  }

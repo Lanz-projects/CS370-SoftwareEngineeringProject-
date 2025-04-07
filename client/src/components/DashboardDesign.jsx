@@ -21,31 +21,23 @@ function DashboardLayout() {
   const [showNextPopup, setShowNextPopup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [recentViewOption, setRecentViewOption] = useState("both"); // Renamed for clarity
-  const [yourPostViewOption, setYourPostViewOption] = useState("both"); // Renamed for clarity
-  const [mobileView, setMobileView] = useState("recent"); // For mobile toggle: "recent" or "your"
-  const [isMobile, setIsMobile] = useState(false); // Check if screen is mobile
-  const [currentUserId, setCurrentUserId] = useState(null); // Add current user ID state
+  const [recentViewOption, setRecentViewOption] = useState("both");
+  const [yourPostViewOption, setYourPostViewOption] = useState("both");
+  const [mobileView, setMobileView] = useState("recent");
+  const [isMobile, setIsMobile] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const navigate = useNavigate();
 
-  // Check window size and set mobile state
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Breakpoint for mobile devices
+      setIsMobile(window.innerWidth < 768);
     };
-
-    // Check on initial load
     checkMobile();
-
-    // Set up event listener for window resize
     window.addEventListener('resize', checkMobile);
-
-    // Clean up event listener
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetching user data and all data (offerings and requests)
   useEffect(() => {
     const abortController = new AbortController();
     const signal = abortController.signal;
@@ -74,7 +66,6 @@ function DashboardLayout() {
         setOfferingList(data.offerings || []);
         setRequestList(data.requests || []);
 
-        // Fetching offerings for the authenticated user
         const offeringsResponse = await fetch(
           "http://localhost:5000/api/offerings",
           {
@@ -92,7 +83,6 @@ function DashboardLayout() {
         const userOfferingdata = await offeringsResponse.json();
         setofferingUserList(userOfferingdata || []);
 
-        // Fetching requests for the authenticated user
         const requestsResponse = await fetch(
           "http://localhost:5000/api/requests",
           {
@@ -111,7 +101,6 @@ function DashboardLayout() {
         const userRequestingdata = await requestsResponse.json();
         setrequestUserList(userRequestingdata || []);
 
-        // Fetching favorite requests
         const favoriteResponse = await fetch(
           "http://localhost:5000/api/favorites",
           {
@@ -129,7 +118,6 @@ function DashboardLayout() {
         setfavoriteOfferList(favoriteResponsedata.favoriteOfferings || []);
         setfavoriteRequestList(favoriteResponsedata.favoriteRequests || []);
 
-        // Fetching favorite requesting and offering ids
         const favoriteIdsResponse = await fetch(
           "http://localhost:5000/api/favorites-ids",
           {
@@ -142,7 +130,6 @@ function DashboardLayout() {
         setfavoriteOfferIDList(favoriteIdsdata.favoriteOfferingsID);
         setfavoriteRequestIDList(favoriteIdsdata.favoriteRequestsID);
 
-        // Check if user has accepted the agreement
         const userResponse = await fetch("http://localhost:5000/api/user", {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -223,7 +210,6 @@ function DashboardLayout() {
     setMobileView(view);
   };
 
-  // Render Recent Listings Section
   const renderRecentListings = () => (
     <div
       className={`${isMobile ? "w-100" : "col-lg-6 col-md-6"} bg-light text-black p-4 rounded-3 text-center`}
@@ -293,7 +279,6 @@ function DashboardLayout() {
     </div>
   );
 
-  // Render Your Recent Posts Section
   const renderYourPosts = () => (
     <div
       className={`${isMobile ? "w-100" : "col-lg-6 col-md-6"} bg-white text-black p-4 rounded-3 text-center`}
@@ -366,7 +351,7 @@ function DashboardLayout() {
             </div>
           ) : null}
           
-          {yourPostViewOption === "favorites" ? (
+          {yourPostViewOption === "favorites" && (
             <div>
               <h5>Your Favorited Offerings</h5>
               {favoriteOfferList.length > 0 ? (
@@ -408,13 +393,12 @@ function DashboardLayout() {
                 <p>No favorite requests yet.</p>
               )}
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </div>
   );
 
-  // Mobile Toggle Component
   const renderMobileToggle = () => (
     <div className="btn-group w-100 mb-3" role="group" aria-label="Mobile View Toggle">
       <button
@@ -436,16 +420,12 @@ function DashboardLayout() {
 
   return (
     <div className="container-fluid p-0">
-      {/* Mobile Toggle Switch */}
       {isMobile && renderMobileToggle()}
 
-      {/* Main Content - Responsive Layout */}
       <div className="d-flex flex-wrap vh-100">
-        {/* On mobile, conditionally render based on toggle */}
         {isMobile ? (
           mobileView === "recent" ? renderRecentListings() : renderYourPosts()
         ) : (
-          // On desktop, show both sections side by side
           <>
             {renderRecentListings()}
             {renderYourPosts()}

@@ -1,33 +1,41 @@
 const express = require("express");
-const Offering = require("../models/Offering-schema"); // Import the Offering schema
-const Request = require("../models/Request-schema"); // Import the Request schema
+const Offering = require("../models/Offering-schema");
+const Request = require("../models/Request-schema");
 const verifyToken = require("../middleware/verifyToken");
-
 const router = express.Router();
 
-// Get all offerings and requests from all users in the database
+// Add timeout middleware
+router.use((req, res, next) => {
+  res.setTimeout(10000, () => { // 10 second timeout
+    res.status(504).json({ error: "Request timeout" });
+  });
+  next();
+});
+
 router.get("/api/all-data", verifyToken, async (req, res) => {
   try {
-    // Fetch all offerings from the Offering schema
-    const offerings = await Offering.find({});
-    
-    // Fetch all requests from the Request schema
-    const requests = await Request.find({});
+    // Use Promise.all for parallel fetching with error handling
+    const [offerings, requests] = await Promise.all([
+      Offering.find({}).maxTimeMS(5000), // 5 second timeout
+      Request.find({}).maxTimeMS(5000)
+    ]);
 
-    // Combine offerings and requests into a single object
-    const allData = {
-      offerings,
-      requests
-    };
-
-    // Log the fetched data to the console
-    //console.log("All Offerings:", offerings);
-    //console.log("All Requests:", requests);
-
-    res.json(allData); // Return both offerings and requests in one response
+    res.json({ offerings, requests });
   } catch (error) {
     console.error("Error fetching all data:", error);
-    res.status(500).json({ error: "Internal server error" });
+    
+    // Specific error handling
+    if (error.name === 'MongoNetworkError') {
+      return res.status(503).json({ error: "Database connection error" });
+    }
+    if (error.name === 'MongoTimeoutError') {
+      return res.status(504).json({ error: "Database operation timed out" });
+    }
+    
+    res.status(500).json({ 
+      error: "Internal server error",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
