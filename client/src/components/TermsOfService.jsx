@@ -64,7 +64,7 @@ function TermsOfService(){
           </Card>
 
           <div className="text-center mt-3">
-            <Button variant="primary" href="/" className={styles.returnButton}>Return to Homepage</Button>
+            <Button variant="primary" href="/profile" className={styles.returnButton}>Return to Profile</Button>
           </div>
         </Col>
       </Row>

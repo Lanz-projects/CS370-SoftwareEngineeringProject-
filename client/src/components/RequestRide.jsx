@@ -108,8 +108,14 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!name.trim()) newErrors.name = "Name is required";
+    
+    // Add name validation to only allow letters and spaces
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+      newErrors.name = "Name can only contain letters and spaces";
+    }
+    
     if (!destination.trim()) newErrors.destination = "Destination is required";
 
     if (!isLocationVerified || !coordinates || coordinates.length !== 2) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import RequestRide from "./RequestRide";
 import PostRideListing from "./PostRideListing";
@@ -30,18 +29,15 @@ const RideListingLayout = () => {
   const [favoriteRequestIDList, setFavoriteRequestIDList] = useState([]);
   const cardsRef = useRef(null);
 
-  // Sort listings based on arrival time and filter by favorites
   const sortedOfferings = useMemo(() => {
     let offerings = [...offeringList];
     
-    // Filter by favorites if enabled
     if (filterOptions.showFavorites) {
       offerings = offerings.filter(offering => 
         favoriteOfferIDList.includes(offering._id)
       );
     }
     
-    // Sort
     if (filterOptions.sortBy === "soonest") {
       return offerings.sort((a, b) => new Date(a.arrivaldate || a.arrivalTime) - new Date(b.arrivaldate || b.arrivalTime));
     } else if (filterOptions.sortBy === "latest") {
@@ -53,14 +49,12 @@ const RideListingLayout = () => {
   const sortedRequests = useMemo(() => {
     let requests = [...requestList];
     
-    // Filter by favorites if enabled
     if (filterOptions.showFavorites) {
       requests = requests.filter(request => 
         favoriteRequestIDList.includes(request._id)
       );
     }
     
-    // Sort
     if (filterOptions.sortBy === "soonest") {
       return requests.sort((a, b) => new Date(a.arrivaldate || a.arrivalTime) - new Date(b.arrivaldate || b.arrivalTime));
     } else if (filterOptions.sortBy === "latest") {
@@ -122,14 +116,12 @@ const RideListingLayout = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
   
-      // Update the favorite IDs list immediately for responsive UI
       if (type === 'offering') {
         setFavoriteOfferIDList(prev => {
           const newList = isFavorite 
             ? prev.filter(item => item !== id)
             : [...prev, id];
           
-          // If we just removed the last favorite and favorites filter is on
           if (isFavorite && newList.length === 0 && filterOptions.showFavorites) {
             setFilterOptions(prev => ({
               ...prev,
@@ -144,7 +136,6 @@ const RideListingLayout = () => {
             ? prev.filter(item => item !== id)
             : [...prev, id];
           
-          // If we just removed the last favorite and favorites filter is on
           if (isFavorite && newList.length === 0 && filterOptions.showFavorites) {
             setFilterOptions(prev => ({
               ...prev,
@@ -185,7 +176,6 @@ const RideListingLayout = () => {
         setRequestList(data.requests || []);
       }
 
-      // Fetch favorite IDs
       const favoriteIdsResponse = await fetch(
         "http://localhost:5000/api/favorites-ids",
         {
@@ -247,7 +237,6 @@ const RideListingLayout = () => {
 
   return (
     <>
-      {/* Desktop View */}
       <div className="container-fluid d-none d-md-flex vh-100 p-0">
         <div className="col-lg-8 col-md-7 p-0">
           <Map 
@@ -261,7 +250,7 @@ const RideListingLayout = () => {
         <div className="col-lg-4 col-md-5 bg-white text-black p-4 rounded-3 d-flex flex-column">
           <div className="d-flex justify-content-between mb-4">
             <button
-              className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
+              className="btn btn-primary text-white rounded-pill flex-grow-1 me-2"
               onClick={() => setShowRequestRideModal(true)}
               style={{ backgroundColor: "#4285F4", border: "none" }}
             >
@@ -292,7 +281,7 @@ const RideListingLayout = () => {
             <div>
               {selectedMarkerId && (
                 <button 
-                  className="btn btn-light text-white rounded-pill me-2"
+                  className="btn btn-primary text-white rounded-pill me-2"
                   onClick={clearSelection}
                   style={{ backgroundColor: "#4285F4", border: "none" }}
                 >
@@ -300,8 +289,9 @@ const RideListingLayout = () => {
                 </button>
               )}
               <button 
-                className="btn btn-outline-secondary"
+                className="btn btn-secondary"
                 onClick={() => setShowFilterModal(true)}
+                style={{ backgroundColor: "#6c757d", border: "none" }}
               >
                 Filter
               </button>
@@ -400,7 +390,6 @@ const RideListingLayout = () => {
         </div>
       </div>
 
-      {/* Mobile View */}
       <div className="container-fluid d-flex d-md-none flex-column vh-100 p-0">
         {showMapMobile && (
           <div style={{ height: "40vh" }}>
@@ -417,16 +406,16 @@ const RideListingLayout = () => {
              style={{ height: showMapMobile ? "60vh" : "100vh", overflowY: "auto" }}>
           <div className="d-flex justify-content-between mb-3">
             <button
-              className="btn btn-light text-white rounded-pill flex-grow-1 me-2"
+              className="btn btn-primary text-white rounded-pill flex-grow-1 me-2"
               onClick={() => setShowRequestRideModal(true)}
               style={{ backgroundColor: "#4285F4", border: "none" }}
             >
               Request Ride
             </button>
             <button
-              className="btn btn-light text-white rounded-pill flex-grow-1 ms-2"
+              className="btn btn-primary text-white rounded-pill flex-grow-1 ms-2"
               onClick={() => setShowPostRideListingModal(true)}
-              style={{ backgroundColor: "black", color: "#510b76", border: "none" }}
+              style={{ backgroundColor: "#4285F4", border: "none" }}
             >
               Post Ride
             </button>
@@ -434,8 +423,9 @@ const RideListingLayout = () => {
 
           <div className="d-flex justify-content-between mb-3">
             <button
-              className="btn btn-outline-secondary flex-grow-1 me-1"
+              className="btn btn-secondary flex-grow-1 me-1"
               onClick={() => setShowFilterModal(true)}
+              style={{ backgroundColor: "#6c757d", border: "none" }}
             >
               Filter
             </button>
@@ -447,7 +437,7 @@ const RideListingLayout = () => {
             </button>
             {selectedMarkerId && (
               <button 
-                className="btn btn-light text-white rounded-pill flex-grow-1 ms-1"
+                className="btn btn-primary text-white rounded-pill flex-grow-1 ms-1"
                 onClick={clearSelection}
                 style={{ backgroundColor: "#4285F4", border: "none" }}
               >

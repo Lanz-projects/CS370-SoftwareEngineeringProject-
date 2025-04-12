@@ -178,7 +178,7 @@ function UserExtraInfoInput() {
               onChange={(e) => setPlatform(e.target.value)}
               id="socialPlatform"
             >
-              <option value="">Select a Platform</option> {/* Default empty selection */}
+              <option value="">Select a Platform</option>
               {["Twitter", "Instagram", "Snapchat", "TikTok", "GroupMe",
                 "Discord", "WhatsApp", "Messenger", "Facebook", "Other"].map((plat) => (
                 <option key={plat} value={plat}>{plat}</option>
