@@ -27,6 +27,10 @@ const requestSchema = new Schema({
         type: Date,
         required: true
     },
+    arrivaltime: {
+        type: String,
+        required: true
+    },
     notes: {
         type: String,
         default: ""

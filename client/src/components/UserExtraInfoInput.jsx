@@ -10,6 +10,7 @@ function UserExtraInfoInput() {
   const [value, setValue] = useState("");
   const [nameError, setNameError] = useState(""); 
   const [emailError, setEmailError] = useState(""); 
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const user = CheckUserLogged();
   const navigate = useNavigate();
@@ -49,44 +50,47 @@ function UserExtraInfoInput() {
     return true;
   };
 
-  const handleAddContactInfo = () => {
-    if (!value.trim()) {
-      alert("Please enter a valid contact value.");
-      return;
-    }
-
-    if (contactType === "social" && !platform.trim()) {
-      alert("Please select a social platform.");
-      return;
-    }
-
-    if (contactType === "email" && !validateEmail(value)) {
-      return; 
-    }
-
-    const newContactInfo = { type: contactType, value };
-
-    if (contactType === "social") {
-      newContactInfo.platform = platform;
-    } else {
-      delete newContactInfo.platform;
-    }
-
-    setContactInfos([...contactInfos, newContactInfo]);
-    setContactType("phone");
-    setValue("");
-    setPlatform(""); 
-  };
-
   const handleDeleteContactInfo = (index) => {
     setContactInfos(contactInfos.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification({ message: "", type: "" });
+    }, 3000);
+  };
 
+  const handleAddContactAndSubmit = async () => {
+    // If there's a value to add, add it first
+    if (value.trim()) {
+      if (contactType === "social" && !platform.trim()) {
+        showNotification("Please select a social media platform", "error");
+        return;
+      }
+
+      if (contactType === "email" && !validateEmail(value)) {
+        return; 
+      }
+
+      const newContactInfo = { type: contactType, value };
+
+      if (contactType === "social") {
+        newContactInfo.platform = platform;
+      } else {
+        delete newContactInfo.platform;
+      }
+
+      // Add the new contact info
+      setContactInfos(prevContactInfos => [...prevContactInfos, newContactInfo]);
+      setContactType("phone");
+      setValue("");
+      setPlatform("");
+    }
+
+    // Then handle the form submission
     if (!token) {
-      alert("Authentication token missing. Please log in again.");
+      showNotification("Your session has expired. Please log in again.", "error");
       navigate('/login');
       return;
     }
@@ -100,26 +104,42 @@ function UserExtraInfoInput() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, contactInfos }),
+        body: JSON.stringify({ 
+          name, 
+          contactInfos: value.trim() 
+            ? [...contactInfos, { type: contactType, value, ...(contactType === "social" ? { platform } : {}) }]
+            : contactInfos 
+        }),
       });
 
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
-        navigate('/profile');
+        showNotification("Your profile has been successfully updated!");
       } else {
-        alert("Error: " + data.error);
+        showNotification(`Unable to update profile: ${data.error}`, "error");
       }
     } catch (error) {
       console.error("Error updating user info:", error);
-      alert("Failed to update user info.");
+      showNotification("We couldn't connect to the server. Please try again later.", "error");
     }
+  };
+
+  const handleExit = () => {
+    navigate('/profile');
   };
 
   return (
     <div className="container mt-4">
       <h2>Setup Your Profile</h2>
-      <form onSubmit={handleSubmit}>
+      
+      {notification.message && (
+        <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">
+          {notification.message}
+          <button type="button" className="btn-close" onClick={() => setNotification({ message: "", type: "" })} aria-label="Close"></button>
+        </div>
+      )}
+      
+      <div>
         <div className="mb-3">
           <label htmlFor="username" className="form-label">Name:</label>
           <input
@@ -182,10 +202,6 @@ function UserExtraInfoInput() {
           {emailError && <div className="text-danger">{emailError}</div>} 
         </div>
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
-          Add Contact Info
-        </button>
-
         <div className="mt-4">
           <h4>Added Contact Info:</h4>
           <ul>
@@ -198,8 +214,15 @@ function UserExtraInfoInput() {
           </ul>
         </div>
 
-        <button type="submit" className="btn btn-primary mt-3">Save</button>
-      </form>
+        <div className="d-flex gap-2 mt-3">
+          <button type="button" className="btn btn-primary" onClick={handleAddContactAndSubmit}>
+            Add Contact & Save
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={handleExit}>
+            Exit
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

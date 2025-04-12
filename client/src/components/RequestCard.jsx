@@ -3,42 +3,58 @@ import { Card, Button, Modal } from "react-bootstrap";
 import { Star, Person, StarFill, Lock, Unlock } from "react-bootstrap-icons";
 
 const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
-  const { name, location, arrivaldate, notes, wants, userid, _id, userAccepted } = request;
+  const {
+    name,
+    location,
+    arrivaldate,
+    arrivaltime,
+    notes,
+    wants,
+    userid,
+    _id,
+    userAccepted,
+  } = request;
   const [showProfile, setShowProfile] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showUnacceptConfirmation, setShowUnacceptConfirmation] = useState(false);
+  const [showUnacceptConfirmation, setShowUnacceptConfirmation] =
+    useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
-  
+
   // Extract destination name from location object if available
-  const destination = location?.formattedAddress || `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+  const destination =
+    location?.formattedAddress ||
+    `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
 
   // Check if this request is favorited
   const isFavoritedStatus = userFavorites?.includes(_id) || false;
-  
+
   // Check if request is already accepted
   const isAccepted = !!userAccepted;
-  
+
   // Check if current user is the one who accepted it
   const isAcceptedByCurrentUser = userAccepted === currentUserId;
+
+  // Check if current user is the author of the request
+  const isCurrentUserAuthor = userid === currentUserId;
 
   // Fetch current user's ID on component mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         if (!token) {
           console.error("No token found in local storage");
           return;
         }
-        
+
         const response = await fetch("http://localhost:5000/api/user", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           setCurrentUserId(userData.user.uid);
@@ -49,7 +65,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         console.error("Error fetching current user:", error);
       }
     };
-    
+
     fetchCurrentUser();
   }, []);
 
@@ -84,14 +100,14 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         },
         body: JSON.stringify({
           requestId: _id,
-          type: "request", 
+          type: "request",
         }),
       });
 
       const data = await response.json();
       if (response.ok) {
         console.log("Request favorite status updated:", data.message);
-        if (onAcceptComplete) onAcceptComplete(); 
+        if (onAcceptComplete) onAcceptComplete();
       } else {
         console.error("Error updating favorite status:", data.error);
       }
@@ -114,7 +130,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const handleConfirm = async () => {
     try {
       const token = localStorage.getItem("token");
-      
+
       const acceptResponse = await fetch(
         `http://localhost:5000/api/accept-request/${_id}`,
         {
@@ -122,31 +138,28 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-          }
+          },
         }
       );
 
       const acceptData = await acceptResponse.json();
-      
+
       if (acceptResponse.ok) {
         if (!isFavoritedStatus) {
-          await fetch(
-            "http://localhost:5000/api/user/favorite-request",
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                requestId: _id,
-                type: "request", 
-              }),
-            }
-          );
+          await fetch("http://localhost:5000/api/user/favorite-request", {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              requestId: _id,
+              type: "request",
+            }),
+          });
           window.location.reload();
         }
-        
+
         console.log("Request accepted successfully:", acceptData.message);
         setShowConfirmation(false);
         if (onAcceptComplete) onAcceptComplete();
@@ -164,7 +177,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const handleConfirmUnaccept = async () => {
     try {
       const token = localStorage.getItem("token");
-      
+
       const unacceptResponse = await fetch(
         `http://localhost:5000/api/unaccept-request/${_id}`,
         {
@@ -172,31 +185,28 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-          }
+          },
         }
       );
 
       const unacceptData = await unacceptResponse.json();
-      
+
       if (unacceptResponse.ok) {
         if (isFavoritedStatus) {
-          await fetch(
-            "http://localhost:5000/api/user/remove-favorite",
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                requestId: _id,
-                type: "request", 
-              }),
-            }
-          );
+          await fetch("http://localhost:5000/api/user/remove-favorite", {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              requestId: _id,
+              type: "request",
+            }),
+          });
           window.location.reload();
         }
-        
+
         console.log("Request unaccepted successfully:", unacceptData.message);
         setShowUnacceptConfirmation(false);
         if (onAcceptComplete) onAcceptComplete();
@@ -210,6 +220,23 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
     }
   };
 
+  function convertTo12HourFormat(arrivalTime) {
+    if (!arrivalTime) return;
+
+    const [hours, minutes] = arrivalTime.split(":").map(Number);
+
+    // Convert to 12-hour format
+    let hour12 = hours % 12; // Get hour in 12-hour format
+    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
+    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
+
+    // Format minutes as a two-digit string
+    const formattedMinutes = String(minutes).padStart(2, "0");
+
+    // Return formatted time in 12-hour format
+    return `${hour12}:${formattedMinutes} ${amPm}`;
+  }
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -217,7 +244,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         <Button
           variant="outline-warning"
           className="position-absolute top-0 end-0 m-2 p-1 border-0"
-          onClick={handleFavorite} 
+          onClick={handleFavorite}
         >
           {isFavoritedStatus ? (
             <StarFill size={20} color="gold" />
@@ -242,12 +269,20 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
             Request for a ride
           </Card.Subtitle>
           <Card.Text>
-            <strong>Location: </strong>
+            <strong>Destination: </strong>
             {destination}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>
             {new Date(arrivaldate).toLocaleDateString()}
+          </Card.Text>
+          <Card.Text>
+            <strong>Arrival Time: </strong>
+            {convertTo12HourFormat(arrivaltime)}
+          </Card.Text>
+          <Card.Text>
+            <strong>Notes: </strong>
+            {notes || "No additional notes."}
           </Card.Text>
           <Card.Text>
             <strong>Notes: </strong>
@@ -264,7 +299,11 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         <Card.Footer className="bg-white border-0 text-center">
           {isAccepted ? (
             isAcceptedByCurrentUser ? (
-              <Button variant="warning" className="w-100" onClick={handleUnaccept}>
+              <Button
+                variant="warning"
+                className="w-100"
+                onClick={handleUnaccept}
+              >
                 <Unlock size={16} className="me-1" /> Unaccept
               </Button>
             ) : (
@@ -272,6 +311,10 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
                 <Lock size={16} className="me-1" /> Already Accepted
               </Button>
             )
+          ) : isCurrentUserAuthor ? (
+            <Button variant="secondary" className="w-100" disabled>
+              <Lock size={16} className="me-1" /> Your Own Request
+            </Button>
           ) : (
             <Button variant="success" className="w-100" onClick={handleAccept}>
               Accept
@@ -329,17 +372,26 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       </Modal>
 
       {/* Accept Confirmation Modal */}
-      <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)} centered>
+      <Modal
+        show={showConfirmation}
+        onHide={() => setShowConfirmation(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Acceptance</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Click confirm and the requester will be notified that you took on their request. This will also show up in your favorites on the dashboard.
+            Click confirm and the requester will be notified that you took on
+            their request. This will also show up in your favorites on the
+            dashboard.
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowConfirmation(false)}
+          >
             Cancel
           </Button>
           <Button variant="primary" onClick={handleConfirm}>
@@ -349,17 +401,25 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       </Modal>
 
       {/* Unaccept Confirmation Modal */}
-      <Modal show={showUnacceptConfirmation} onHide={() => setShowUnacceptConfirmation(false)} centered>
+      <Modal
+        show={showUnacceptConfirmation}
+        onHide={() => setShowUnacceptConfirmation(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Unaccept</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to unaccept this request? The requester will be notified, and it will be removed from your favorites.
+            Are you sure you want to unaccept this request? The requester will
+            be notified, and it will be removed from your favorites.
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowUnacceptConfirmation(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowUnacceptConfirmation(false)}
+          >
             Cancel
           </Button>
           <Button variant="warning" onClick={handleConfirmUnaccept}>

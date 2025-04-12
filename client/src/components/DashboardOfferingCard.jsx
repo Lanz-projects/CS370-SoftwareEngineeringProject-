@@ -8,6 +8,7 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
     name,
     location,
     arrivaldate,
+    arrivaltime,
     vehicleid,
     notes,
     _id,
@@ -15,7 +16,7 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
     originalMaxSeats,
     waitingList,
     acceptedUsers,
-    userid
+    userid,
   } = offering;
 
   const [showModal, setShowModal] = useState(false);
@@ -24,9 +25,10 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
 
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
   const isFavorited = userFavorites.includes(_id);
-  
+
   // Calculate total capacity (if originalMaxSeats exists, use it, otherwise use maxSeats + acceptedUsers.length)
-  const totalCapacity = originalMaxSeats || (maxSeats + acceptedUsers?.length || 0);
+  const totalCapacity =
+    originalMaxSeats || maxSeats + acceptedUsers?.length || 0;
 
   const handleFavorite = async () => {
     try {
@@ -111,6 +113,23 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
     }
   };
 
+  function convertTo12HourFormat(arrivalTime) {
+    if (!arrivalTime) return;
+
+    const [hours, minutes] = arrivalTime.split(":").map(Number);
+
+    // Convert to 12-hour format
+    let hour12 = hours % 12; // Get hour in 12-hour format
+    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
+    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
+
+    // Format minutes as a two-digit string
+    const formattedMinutes = String(minutes).padStart(2, "0");
+
+    // Return formatted time in 12-hour format
+    return `${hour12}:${formattedMinutes} ${amPm}`;
+  }
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -129,8 +148,8 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center">
             <Card.Title>{name}</Card.Title>
-            <Button 
-              variant="outline-primary" 
+            <Button
+              variant="outline-primary"
               className="border-0"
               onClick={fetchUserProfile}
             >
@@ -142,12 +161,20 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
             Offer a ride
           </Card.Subtitle>
           <Card.Text>
-            <strong>Location: </strong>
+            <strong>Destination: </strong>
             {locationString}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>
             {new Date(arrivaldate).toLocaleDateString()}
+          </Card.Text>
+          <Card.Text>
+            <strong>Arrival Time: </strong>
+            {convertTo12HourFormat(arrivaltime)}
+          </Card.Text>
+          <Card.Text>
+            <strong>Notes: </strong>
+            {notes || "No additional notes."}
           </Card.Text>
           <Card.Text>
             <strong>Notes: </strong>

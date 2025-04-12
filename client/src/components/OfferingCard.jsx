@@ -9,6 +9,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     name,
     location = {},
     arrivaldate,
+    arrivaltime,
     vehicleid,
     notes,
     userid,
@@ -16,7 +17,6 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     originalMaxSeats,
     waitingList = [],
   } = offering || {};
-
   const [showProfile, setShowProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -94,6 +94,25 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     return <Card className="mb-3 p-3">No offering data available</Card>;
   }
 
+  function convertTo12HourFormat(arrivalTime) {
+    if (!arrivalTime) return;
+
+    const [hours, minutes] = arrivalTime.split(":").map(Number);
+  
+    // Convert to 12-hour format
+    let hour12 = hours % 12; // Get hour in 12-hour format
+    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
+    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
+    
+    // Format minutes as a two-digit string
+    const formattedMinutes = String(minutes).padStart(2, "0");
+  
+    // Return formatted time in 12-hour format
+    return `${hour12}:${formattedMinutes} ${amPm}`;
+  }
+
+
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -126,12 +145,17 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
             Offering a Ride
           </Card.Subtitle>
           <Card.Text>
-            <strong>Location: </strong>
+            <strong>Destination: </strong>
             {destination}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>
             {new Date(arrivaldate).toLocaleDateString()}
+          </Card.Text>
+          
+          <Card.Text>
+            <strong>Arrival Time: </strong>
+            {convertTo12HourFormat(arrivaltime)}
           </Card.Text>
           <Card.Text>
             <strong>Notes: </strong>

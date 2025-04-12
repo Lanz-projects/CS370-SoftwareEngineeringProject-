@@ -7,6 +7,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
   const [coordinates, setCoordinates] = useState(null);
   const [formattedAddress, setFormattedAddress] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
+  const [arrivalTime, setArrivalTime] = useState(""); // Added state for arrival time
   const [notes, setNotes] = useState("");
   const [wants, setWants] = useState("");
   const [errors, setErrors] = useState({});
@@ -18,7 +19,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const maxDate = new Date(today);
-  maxDate.setMonth(today.getMonth() + 1);
+  maxDate.setMonth(today.getMonth() + 3);
 
   const todayString = today.toISOString().split("T")[0];
   const maxDateString = maxDate.toISOString().split("T")[0];
@@ -26,15 +27,19 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
   const geocodeAddress = async (address) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${import.meta.env.VITE_GEOLOCATION_API}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address
+        )}&key=${import.meta.env.VITE_GEOLOCATION_API}`
       );
-      
+
       if (!response.ok) {
-        throw new Error(`Geocoding API request failed with status ${response.status}`);
+        throw new Error(
+          `Geocoding API request failed with status ${response.status}`
+        );
       }
-      
+
       const data = await response.json();
-      
+
       if (data.status !== "OK") {
         throw new Error(data.error_message || "Location not found");
       }
@@ -43,28 +48,27 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       if (!location) {
         throw new Error("No location data returned from geocoding service");
       }
-      
+
       const lng = parseFloat(location.lng);
       const lat = parseFloat(location.lat);
-      
+
       if (isNaN(lng) || Math.abs(lng) > 180) {
         throw new Error(`Invalid longitude received: ${location.lng}`);
       }
       if (isNaN(lat) || Math.abs(lat) > 90) {
         throw new Error(`Invalid latitude received: ${location.lat}`);
       }
-      
+
       return {
         lng,
         lat,
-        formattedAddress: data.results[0].formatted_address
+        formattedAddress: data.results[0].formatted_address,
       };
-      
     } catch (error) {
       console.error("Geocoding failed:", error);
-      setMessage({ 
-        type: "danger", 
-        text: `Location search failed: ${error.message}` 
+      setMessage({
+        type: "danger",
+        text: `Location search failed: ${error.message}`,
       });
       return null;
     }
@@ -75,7 +79,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       setMessage({ type: "warning", text: "Please enter a destination" });
       return;
     }
-    
+
     setIsLoading(true);
     setMessage(null);
     try {
@@ -93,9 +97,9 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       setCoordinates(null);
       setFormattedAddress("");
       setIsLocationVerified(false);
-      setMessage({ 
-        type: "danger", 
-        text: error.message || "Failed to find location" 
+      setMessage({
+        type: "danger",
+        text: error.message || "Failed to find location",
       });
     } finally {
       setIsLoading(false);
@@ -104,23 +108,69 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!name.trim()) newErrors.name = "Name is required";
     if (!destination.trim()) newErrors.destination = "Destination is required";
-    
+
     if (!isLocationVerified || !coordinates || coordinates.length !== 2) {
       newErrors.coordinates = "Please verify your location";
-    } else if (coordinates.some(c => c === null || isNaN(c) || typeof c !== 'number')) {
+    } else if (
+      coordinates.some((c) => c === null || isNaN(c) || typeof c !== "number")
+    ) {
       newErrors.coordinates = "Invalid location coordinates";
       console.error("Invalid coordinates detected:", coordinates);
     }
+
+
+    if (!arrivalDate) {
+      newErrors.arrivalDate = "Arrival date is required";
+    } else {
+      // Parse the date string into year, month, day components
+      const [year, month, day] = arrivalDate.split("-").map(Number);
+      
+      // Create date at local midnight for comparison
+      const selectedDate = new Date(year, month - 1, day);
+      
+      // Get today's date at local midnight
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Get the maximum allowable date (3 months ahead) at local midnight
+      const maxDate = new Date();
+      maxDate.setMonth(maxDate.getMonth() + 3);
+      maxDate.setHours(0, 0, 0, 0);
+      
+      // Compare dates
+      if (selectedDate < today) {
+        newErrors.arrivalDate = "Arrival date cannot be in the past";
+      } else if (selectedDate > maxDate) {
+        newErrors.arrivalDate = "Arrival date cannot be more than three months ahead";
+      }
+    }
     
-    if (!arrivalDate) newErrors.arrivalDate = "Arrival date is required";
-    else if (new Date(arrivalDate) < today) newErrors.arrivalDate = "Arrival date cannot be in the past";
-    else if (new Date(arrivalDate) > maxDate) newErrors.arrivalDate = "Arrival date cannot be more than one month ahead";
-    
-    if (notes.length > 200) newErrors.notes = "Notes must be under 200 characters";
-    if (wants.length > 200) newErrors.wants = "Wants must be under 200 characters";
+    if (!arrivalTime) {
+      newErrors.arrivalTime = "Arrival time is required";
+    } else if (arrivalDate) {
+      // Parse date and time components
+      const [year, month, day] = arrivalDate.split("-").map(Number);
+      const [hours, minutes] = arrivalTime.split(":").map(Number);
+      
+      // Create date object with the arrival date and time in local time zone
+      const arrivalDateTime = new Date(year, month - 1, day, hours, minutes);
+      
+      // Get current date and time
+      const now = new Date();
+      
+      // Compare full datetime objects directly
+      if (arrivalDateTime < now) {
+        newErrors.arrivalTime = "Arrival time cannot be in the past";
+      }
+    }
+
+    if (notes.length > 200)
+      newErrors.notes = "Notes must be under 200 characters";
+    if (wants.length > 200)
+      newErrors.wants = "Wants must be under 200 characters";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,16 +178,16 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     // Additional coordinate validation
-    if (!coordinates || coordinates.some(c => c === null || isNaN(c))) {
-      setMessage({ 
-        type: "danger", 
-        text: "Invalid location coordinates. Please verify your location." 
+    if (!coordinates || coordinates.some((c) => c === null || isNaN(c))) {
+      setMessage({
+        type: "danger",
+        text: "Invalid location coordinates. Please verify your location.",
       });
       setIsLocationVerified(false);
       return;
@@ -149,9 +199,10 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       longitude: coordinates[0],
       latitude: coordinates[1],
       arrivaldate: new Date(arrivalDate).toISOString(),
+      arrivaltime: arrivalTime,
       notes: notes || "",
       wants: wants || "",
-      formattedAddress // Include formatted address in the request
+      formattedAddress,
     };
 
     setIsLoading(true);
@@ -171,11 +222,11 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       }
 
       const data = await response.json();
-      setMessage({ 
-        type: "success", 
-        text: data.message || "Ride request posted successfully!" 
+      setMessage({
+        type: "success",
+        text: data.message || "Ride request posted successfully!",
       });
-      
+
       // Reset form and notify parent component
       setTimeout(() => {
         setName("");
@@ -183,6 +234,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
         setCoordinates(null);
         setFormattedAddress("");
         setArrivalDate("");
+        setArrivalTime("");
         setNotes("");
         setWants("");
         setIsLocationVerified(false);
@@ -192,9 +244,9 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
         handleClose();
       }, 1500);
     } catch (error) {
-      setMessage({ 
-        type: "danger", 
-        text: error.message || "Failed to post ride request" 
+      setMessage({
+        type: "danger",
+        text: error.message || "Failed to post ride request",
       });
     } finally {
       setIsLoading(false);
@@ -208,7 +260,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       </Modal.Header>
       <Modal.Body>
         {message && <Alert variant={message.type}>{message.text}</Alert>}
-        
+
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Your Name</Form.Label>
@@ -242,8 +294,8 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
                 isInvalid={!!errors.destination || !!errors.coordinates}
                 required
               />
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={handleDestinationSearch}
                 disabled={!destination.trim() || isLoading}
                 className="ms-2"
@@ -257,9 +309,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
               </Form.Control.Feedback>
             )}
             {errors.coordinates && (
-              <div className="text-danger small mt-1">
-                {errors.coordinates}
-              </div>
+              <div className="text-danger small mt-1">{errors.coordinates}</div>
             )}
             {formattedAddress && (
               <div className="mt-2 text-muted small">
@@ -269,7 +319,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Arrival Date</Form.Label>
+            <Form.Label>Arrival Date (Max: 3 months in advance)</Form.Label>
             <Form.Control
               type="date"
               value={arrivalDate}
@@ -282,6 +332,23 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
             <Form.Control.Feedback type="invalid">
               {errors.arrivalDate}
             </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Arrival Time</Form.Label>
+            <Form.Control
+              type="time"
+              value={arrivalTime}
+              onChange={(e) => setArrivalTime(e.target.value)}
+              isInvalid={!!errors.arrivalTime}
+              required
+            />
+            <Form.Control.Feedback type="invalid">
+              {errors.arrivalTime}
+            </Form.Control.Feedback>
+            <Form.Text className="text-muted">
+              Ex: 1:30 AM or 11:00 PM
+            </Form.Text>
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -322,9 +389,9 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
             </Form.Text>
           </Form.Group>
 
-          <Button 
-            type="submit" 
-            variant="primary" 
+          <Button
+            type="submit"
+            variant="primary"
             disabled={isLoading || !isLocationVerified}
             className="w-100 mt-3"
           >

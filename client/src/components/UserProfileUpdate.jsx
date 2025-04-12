@@ -9,7 +9,8 @@ function UserProfileUpdate() {
   const [platform, setPlatform] = useState("");
   const [value, setValue] = useState("");
   const [nameError, setNameError] = useState(""); 
-  const [emailError, setEmailError] = useState(""); 
+  const [emailError, setEmailError] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const user = CheckUserLogged();
   const navigate = useNavigate();
@@ -22,6 +23,13 @@ function UserProfileUpdate() {
       fetchUserData();
     }
   }, [user, navigate]);
+
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification({ message: "", type: "" });
+    }, 3000);
+  };
 
   const fetchUserData = async () => {
     try {
@@ -38,10 +46,11 @@ function UserProfileUpdate() {
         setName(data.user.name || "");
         setContactInfos(data.user.contactInfo || []);
       } else {
-        alert("Error fetching user data: " + data.error);
+        showNotification(`We couldn't load your profile data: ${data.error}`, "error");
       }
     } catch (error) {
       console.error("Error fetching user info:", error);
+      showNotification("We're having trouble connecting to the server. Please try again later.", "error");
     }
   };
 
@@ -69,44 +78,41 @@ function UserProfileUpdate() {
     return true;
   };
 
-  const handleAddContactInfo = () => {
-    if (!value.trim()) {
-      alert("Please enter a valid contact value.");
-      return;
-    }
-
-    if (contactType === "social" && !platform.trim()) {
-      alert("Please select a social platform.");
-      return;
-    }
-
-    if (contactType === "email" && !validateEmail(value)) {
-      return; 
-    }
-
-    const newContactInfo = { type: contactType, value };
-
-    if (contactType === "social") {
-      newContactInfo.platform = platform;
-    }
-
-    setContactInfos([...contactInfos, newContactInfo]);
-    setContactType("phone");
-    setValue("");
-    setPlatform(""); 
-  };
-
   const handleDeleteContactInfo = (index) => {
     if (contactInfos.length === 1) {
-      alert("You must have at least one contact info.");
+      showNotification("At least one contact method is required", "error");
       return;
     }
 
     setContactInfos(contactInfos.filter((_, i) => i !== index));
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleAddContactAndUpdate = async () => {
+    // If there's a value to add, add it first
+    if (value.trim()) {
+      if (contactType === "social" && !platform.trim()) {
+        showNotification("Please select a social media platform", "error");
+        return;
+      }
+
+      if (contactType === "email" && !validateEmail(value)) {
+        return; 
+      }
+
+      const newContactInfo = { type: contactType, value };
+
+      if (contactType === "social") {
+        newContactInfo.platform = platform;
+      }
+
+      // Add the new contact info
+      setContactInfos(prevContactInfos => [...prevContactInfos, newContactInfo]);
+      setContactType("phone");
+      setValue("");
+      setPlatform("");
+    }
+
+    // Then handle the update submission
     if (!validateName(name) || contactInfos.length === 0) return;
 
     try {
@@ -116,25 +122,42 @@ function UserProfileUpdate() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, contactInfo: contactInfos }), 
+        body: JSON.stringify({ 
+          name, 
+          contactInfo: value.trim() 
+            ? [...contactInfos, { type: contactType, value, ...(contactType === "social" ? { platform } : {}) }]
+            : contactInfos 
+        }),
       });
 
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
-        navigate("/profile");
+        showNotification("Your profile has been successfully updated!");
       } else {
-        alert("Error: " + data.error);
+        showNotification(`Unable to update profile: ${data.error}`, "error");
       }
     } catch (error) {
       console.error("Error updating user info:", error);
+      showNotification("We couldn't connect to the server. Please try again later.", "error");
     }
+  };
+
+  const handleExit = () => {
+    navigate("/profile");
   };
 
   return (
     <div className="container mt-4">
       <h2>Update Your Profile</h2>
-      <form onSubmit={handleUpdate}>
+      
+      {notification.message && (
+        <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">
+          {notification.message}
+          <button type="button" className="btn-close" onClick={() => setNotification({ message: "", type: "" })} aria-label="Close"></button>
+        </div>
+      )}
+      
+      <div>
         <div className="mb-3">
           <label htmlFor="username" className="form-label">Name:</label>
           <input
@@ -197,10 +220,6 @@ function UserProfileUpdate() {
           {emailError && <div className="text-danger">{emailError}</div>} 
         </div>
 
-        <button type="button" className="btn btn-secondary" onClick={handleAddContactInfo}>
-          Add Contact Info
-        </button>
-
         <div className="mt-4">
           <h4>Added Contact Info:</h4>
           <ul>
@@ -213,8 +232,15 @@ function UserProfileUpdate() {
           </ul>
         </div>
 
-        <button type="submit" className="btn btn-primary mt-3">Save Changes</button>
-      </form>
+        <div className="d-flex gap-2 mt-3">
+          <button type="button" className="btn btn-primary" onClick={handleAddContactAndUpdate}>
+            Add Contact & Save
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={handleExit}>
+            Exit
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

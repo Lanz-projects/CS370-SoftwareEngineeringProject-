@@ -3,16 +3,27 @@ import { Card, Button, Modal } from "react-bootstrap";
 import { Star, Person, StarFill, Lock, Unlock } from "react-bootstrap-icons";
 
 const DashboardRequestCard = ({ request, userFavorites }) => {
-  const { name, location, arrivaldate, notes, wants, _id, userid, userAccepted } = request;
+  const {
+    name,
+    location,
+    arrivaldate,
+    arrivaltime,
+    notes,
+    wants,
+    _id,
+    userid,
+    userAccepted,
+  } = request;
   const [showProfile, setShowProfile] = useState(false);
-  const [showUnacceptConfirmation, setShowUnacceptConfirmation] = useState(false);
+  const [showUnacceptConfirmation, setShowUnacceptConfirmation] =
+    useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isOwnPost, setIsOwnPost] = useState(false);
 
   const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
   const isFavorited = userFavorites.includes(_id);
-  
+
   // Check if request is accepted and if it's accepted by the current user
   const isAccepted = !!userAccepted;
   const isAcceptedByCurrentUser = userAccepted === currentUserId;
@@ -22,22 +33,22 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        
+
         if (!token) {
           console.error("No token found in local storage");
           return;
         }
-        
+
         const response = await fetch("http://localhost:5000/api/user", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           setCurrentUserId(userData.user.uid);
-          
+
           // Check if this post belongs to the current user
           setIsOwnPost(userData.user.uid === userid);
           //setIsOwnPost(false);
@@ -48,7 +59,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
         console.error("Error fetching current user:", error);
       }
     };
-    
+
     fetchCurrentUser();
   }, [userid]);
 
@@ -121,7 +132,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
   const handleConfirmUnaccept = async () => {
     try {
       const token = localStorage.getItem("token");
-      
+
       // Update the request to remove acceptance
       const unacceptResponse = await fetch(
         `http://localhost:5000/api/unaccept-request/${_id}`,
@@ -130,36 +141,33 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-          }
+          },
         }
       );
 
       const unacceptData = await unacceptResponse.json();
-      
+
       if (unacceptResponse.ok) {
         // Remove from favorites if currently favorited
         if (isFavorited) {
-          await fetch(
-            "http://localhost:5000/api/user/remove-favorite",
-            {
-              method: "PUT",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                requestId: _id,
-                type: "request", 
-              }),
-            }
-          );
+          await fetch("http://localhost:5000/api/user/remove-favorite", {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              requestId: _id,
+              type: "request",
+            }),
+          });
         }
-        
+
         console.log("Request unaccepted successfully:", unacceptData.message);
-        
+
         // Close unaccept confirmation modal
         setShowUnacceptConfirmation(false);
-        
+
         // Refresh the page to show changes
         window.location.reload();
       } else {
@@ -223,6 +231,23 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     }
   };
 
+  function convertTo12HourFormat(arrivalTime) {
+    if (!arrivalTime) return;
+
+    const [hours, minutes] = arrivalTime.split(":").map(Number);
+
+    // Convert to 12-hour format
+    let hour12 = hours % 12; // Get hour in 12-hour format
+    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
+    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
+
+    // Format minutes as a two-digit string
+    const formattedMinutes = String(minutes).padStart(2, "0");
+
+    // Return formatted time in 12-hour format
+    return `${hour12}:${formattedMinutes} ${amPm}`;
+  }
+
   return (
     <>
       <Card className="mb-3 position-relative p-3 shadow-sm rounded">
@@ -254,12 +279,20 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
             Request for a ride
           </Card.Subtitle>
           <Card.Text>
-            <strong>Location: </strong>
+            <strong>Destination: </strong>
             {locationString}
           </Card.Text>
           <Card.Text>
             <strong>Arrival Date: </strong>
             {new Date(arrivaldate).toLocaleDateString()}
+          </Card.Text>
+          <Card.Text>
+            <strong>Arrival Time: </strong>
+            {convertTo12HourFormat(arrivaltime)}
+          </Card.Text>
+          <Card.Text>
+            <strong>Notes: </strong>
+            {notes || "No additional notes."}
           </Card.Text>
           <Card.Text>
             <strong>Notes: </strong>
@@ -334,17 +367,25 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
       </Modal>
 
       {/* Unaccept Confirmation Modal */}
-      <Modal show={showUnacceptConfirmation} onHide={() => setShowUnacceptConfirmation(false)} centered>
+      <Modal
+        show={showUnacceptConfirmation}
+        onHide={() => setShowUnacceptConfirmation(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Unaccept</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>
-            Are you sure you want to unaccept this request? The requester will be notified, and it will be removed from your favorites.
+            Are you sure you want to unaccept this request? The requester will
+            be notified, and it will be removed from your favorites.
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowUnacceptConfirmation(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowUnacceptConfirmation(false)}
+          >
             Cancel
           </Button>
           <Button variant="warning" onClick={handleConfirmUnaccept}>

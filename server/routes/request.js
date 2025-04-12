@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Create a new request
 router.post("/api/create-request", verifyToken, async (req, res) => {
-  const { name, latitude, longitude, arrivaldate, notes, wants, formattedAddress } = req.body;
+  const { name, latitude, longitude, arrivaldate, arrivaltime, notes, wants, formattedAddress } = req.body;
   const userId = req.user.uid;
 
   // Validate required fields
@@ -38,6 +38,48 @@ router.post("/api/create-request", verifyToken, async (req, res) => {
   const lat = parseFloat(latitude);
   const lng = parseFloat(longitude);
 
+  // Validate coordinates range
+  if (Math.abs(lng) > 180 || Math.abs(lat) > 90) {
+    return res.status(400).json({
+      error: "Invalid coordinates",
+      details: "Longitude must be between -180 and 180, Latitude between -90 and 90"
+    });
+  }
+
+  // Validate date
+  const arrivalDate = new Date(arrivaldate);
+  if (isNaN(arrivalDate.getTime())) {
+    return res.status(400).json({ error: "Invalid arrival date" });
+  }
+
+  // Check time format: HH:MM (24-hour)
+  if (arrivaltime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(arrivaltime)) {
+    return res.status(400).json({
+      error: "Invalid arrival time",
+      details: "Time must be in format HH:MM (24-hour format)"
+    });
+  }
+
+  // Only check if it's in the past *if* the date is today
+  if (arrivaltime) {
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+    if (arrivaldate === todayStr) {
+      // Convert arrival time string to a Date object for today
+      const [hours, minutes] = arrivaltime.split(":").map(Number);
+      const arrivalDateTime = new Date();
+      arrivalDateTime.setHours(hours, minutes, 0, 0);
+
+      if (arrivalDateTime < now) {
+        return res.status(400).json({
+          error: "Invalid arrival time",
+          details: "Arrival time cannot be in the past"
+        });
+      }
+    }
+  }
+
   try {
     // Ensure the user exists
     const user = await User.findOne({ uid: userId });
@@ -54,7 +96,8 @@ router.post("/api/create-request", verifyToken, async (req, res) => {
         coordinates: [lng, lat],
         formattedAddress
       },
-      arrivaldate: new Date(arrivaldate),
+      arrivaldate: arrivalDate,
+      arrivaltime: arrivaltime || "",
       notes: notes || "",
       wants: wants || "",
     });
@@ -108,6 +151,100 @@ router.get("/api/requests", verifyToken, async (req, res) => {
     res.status(500).json({ 
       error: "Internal server error",
       details: error.message 
+    });
+  }
+});
+
+// Update a request
+router.put("/api/update-request/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.uid;
+  const { name, latitude, longitude, arrivaldate, arrivaltime, notes, wants, formattedAddress } = req.body;
+
+  try {
+    // Find the request to update
+    const request = await Request.findOne({ _id: id, userid: userId });
+    if (!request) {
+      return res.status(404).json({ error: "Request not found or unauthorized" });
+    }
+
+    // Validate coordinates if provided
+    if (longitude !== undefined || latitude !== undefined) {
+      const lng = longitude !== undefined ? parseFloat(longitude) : request.location.coordinates[0];
+      const lat = latitude !== undefined ? parseFloat(latitude) : request.location.coordinates[1];
+      
+      if (isNaN(lng) || isNaN(lat) || Math.abs(lng) > 180 || Math.abs(lat) > 90) {
+        return res.status(400).json({ 
+          error: "Invalid coordinates",
+          details: "Longitude must be between -180 and 180, Latitude between -90 and 90"
+        });
+      }
+    }
+
+    // Validate time format if provided
+    if (arrivaltime !== undefined && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(arrivaltime)) {
+      return res.status(400).json({
+        error: "Invalid arrival time",
+        details: "Time must be in format HH:MM (24-hour format)"
+      });
+    }
+
+    // Validate that the updated arrival date and time are not in the past
+    if (arrivaldate || arrivaltime) {
+      const updatedDate = arrivaldate ? new Date(arrivaldate) : request.arrivaldate;
+      const updatedTime = arrivaltime || request.arrivaltime;
+      
+      if (updatedTime) {
+        const [hours, minutes] = updatedTime.split(":").map(Number);
+        const fullArrivalDate = new Date(updatedDate);
+        fullArrivalDate.setHours(hours, minutes, 0, 0);
+
+        const now = new Date();
+        if (fullArrivalDate < now) {
+          return res.status(400).json({
+            error: "Invalid arrival time",
+            details: "Arrival date and time cannot be in the past"
+          });
+        }
+      }
+    }
+
+    // Build update object
+    const updateData = {};
+    
+    if (name) updateData.name = name;
+    if (notes !== undefined) updateData.notes = notes;
+    if (wants !== undefined) updateData.wants = wants;
+    if (arrivaldate) updateData.arrivaldate = new Date(arrivaldate);
+    if (arrivaltime !== undefined) updateData.arrivaltime = arrivaltime;
+    
+    // Update location if coordinates provided
+    if (longitude !== undefined && latitude !== undefined) {
+      updateData.location = {
+        type: "Point",
+        coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      };
+      if (formattedAddress) {
+        updateData.location.formattedAddress = formattedAddress;
+      }
+    }
+
+    // Update the request
+    const updatedRequest = await Request.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      message: "Request updated successfully",
+      request: updatedRequest
+    });
+  } catch (error) {
+    console.error("Error updating request:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message
     });
   }
 });

@@ -37,6 +37,10 @@ const offeringSchema = new Schema({
         type: Date,
         required: true
     },
+    arrivaltime: {  
+        type: String,
+        required: true
+    },
     vehicleid: {                              
         type: mongoose.Schema.Types.ObjectId,
         required: true
