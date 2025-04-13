@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CheckUserLogged from "./CheckUserLogged";
+import InfoPopup from "./InfoPopup"; // Import the InfoPopup component
 
 function UserProfileUpdate() {
   const [name, setName] = useState("");
@@ -147,8 +148,11 @@ function UserProfileUpdate() {
   };
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 position-relative">
       <h2>Update Your Profile</h2>
+      
+      {/* Add the InfoPopup component */}
+      <InfoPopup />
       
       {notification.message && (
         <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">

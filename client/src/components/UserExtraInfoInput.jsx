@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CheckUserLogged from "./CheckUserLogged";
+import InfoPopup from "./InfoPopup"; // Import the InfoPopup component
 
 function UserExtraInfoInput() {
   const [name, setName] = useState("");
@@ -129,8 +130,11 @@ function UserExtraInfoInput() {
   };
 
   return (
-    <div className="container mt-4">
+    <div className="container mt-4 position-relative">
       <h2>Setup Your Profile</h2>
+      
+      {/* Add the InfoPopup component */}
+      <InfoPopup />
       
       {notification.message && (
         <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">
@@ -208,7 +212,7 @@ function UserExtraInfoInput() {
             {contactInfos.map((contact, index) => (
               <li key={index}>
                 {contact.type} - {contact.value} {contact.platform && `(${contact.platform})`}
-                <button type="button" className="btn btn-danger btn-sm ml-3" onClick={() => handleDeleteContactInfo(index)}>Delete</button>
+                <button type="button" className="btn btn-danger btn-sm ms-2" onClick={() => handleDeleteContactInfo(index)}>Delete</button>
               </li>
             ))}
           </ul>
