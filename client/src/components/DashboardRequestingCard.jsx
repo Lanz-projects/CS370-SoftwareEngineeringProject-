@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person, StarFill, Lock, Unlock } from "react-bootstrap-icons";
+import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Star, Person, StarFill, Lock, Unlock, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
 
 const DashboardRequestCard = ({ request, userFavorites }) => {
   const {
@@ -14,19 +14,29 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     userid,
     userAccepted,
   } = request;
+  
   const [showProfile, setShowProfile] = useState(false);
-  const [showUnacceptConfirmation, setShowUnacceptConfirmation] =
-    useState(false);
+  const [showUnacceptConfirmation, setShowUnacceptConfirmation] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isOwnPost, setIsOwnPost] = useState(false);
+  const [showFullNotes, setShowFullNotes] = useState(false);
+  const [showFullWants, setShowFullWants] = useState(false);
 
-  const locationString = `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
   const isFavorited = userFavorites.includes(_id);
-
-  // Check if request is accepted and if it's accepted by the current user
   const isAccepted = !!userAccepted;
   const isAcceptedByCurrentUser = userAccepted === currentUserId;
+
+  // Truncate longer text
+  const truncateText = (text, maxLength = 80) => {
+    if (!text) return "No additional information.";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+
+  // Format location to be more readable
+  const formatLocation = () => {
+    return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+  };
 
   // Fetch current user's ID on component mount
   useEffect(() => {
@@ -48,10 +58,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
         if (response.ok) {
           const userData = await response.json();
           setCurrentUserId(userData.user.uid);
-
-          // Check if this post belongs to the current user
           setIsOwnPost(userData.user.uid === userid);
-          //setIsOwnPost(false);
         } else {
           console.error("Failed to fetch user data");
         }
@@ -63,7 +70,6 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     fetchCurrentUser();
   }, [userid]);
 
-  // Handle the "star" button click
   const handleFavorite = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -86,8 +92,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Request favorite status updated:", data.message);
-        window.location.reload(); // Refresh to show changes
+        window.location.reload();
       } else {
         console.error("Error updating favorite status:", data.error);
       }
@@ -96,7 +101,6 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     }
   };
 
-  // Handle the "Cancel" button click (delete request)
   const handleCancel = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -113,7 +117,6 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Request deleted successfully:", data.message);
         window.location.reload();
       } else {
         console.error("Error deleting request:", data.error);
@@ -123,17 +126,13 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     }
   };
 
-  // Handle the "Unaccept" button click
   const handleUnaccept = () => {
     setShowUnacceptConfirmation(true);
   };
 
-  // Handle confirmation of unaccepting
   const handleConfirmUnaccept = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      // Update the request to remove acceptance
       const unacceptResponse = await fetch(
         `http://localhost:5000/api/unaccept-request/${_id}`,
         {
@@ -148,7 +147,6 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
       const unacceptData = await unacceptResponse.json();
 
       if (unacceptResponse.ok) {
-        // Remove from favorites if currently favorited
         if (isFavorited) {
           await fetch("http://localhost:5000/api/user/remove-favorite", {
             method: "PUT",
@@ -162,13 +160,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
             }),
           });
         }
-
-        console.log("Request unaccepted successfully:", unacceptData.message);
-
-        // Close unaccept confirmation modal
         setShowUnacceptConfirmation(false);
-
-        // Refresh the page to show changes
         window.location.reload();
       } else {
         console.error("Error unaccepting request:", unacceptData.error);
@@ -196,35 +188,28 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
   // Determine which button to show in the footer
   const renderFooterButton = () => {
     if (isOwnPost) {
-      // If it's the user's own post, always show Cancel button
       return (
-        <Button variant="danger" className="w-100" onClick={handleCancel}>
+        <Button variant="danger" size="sm" className="w-100" onClick={handleCancel}>
           Cancel
         </Button>
       );
     } else if (isAccepted) {
-      // For accepted posts that aren't the user's own
-      //console.log("isAccepted:", isAccepted);
-      //console.log("isAcceptedByCurrentUser:", isAcceptedByCurrentUser);
       if (isAcceptedByCurrentUser) {
-        // Show Unaccept button if current user is the one who accepted it
         return (
-          <Button variant="warning" className="w-100" onClick={handleUnaccept}>
+          <Button variant="warning" size="sm" className="w-100" onClick={handleUnaccept}>
             <Unlock size={16} className="me-1" /> Unaccept
           </Button>
         );
       } else {
-        // Show disabled button if someone else accepted it
         return (
-          <Button variant="secondary" className="w-100" disabled>
+          <Button variant="secondary" size="sm" className="w-100" disabled>
             <Lock size={16} className="me-1" /> Already Accepted
           </Button>
         );
       }
     } else {
-      // Default case - no one has accepted it yet and it's not user's own post
       return (
-        <Button variant="success" className="w-100" disabled>
+        <Button variant="success" size="sm" className="w-100" disabled>
           Not Accepted
         </Button>
       );
@@ -235,78 +220,129 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
     if (!arrivalTime) return;
 
     const [hours, minutes] = arrivalTime.split(":").map(Number);
-
-    // Convert to 12-hour format
-    let hour12 = hours % 12; // Get hour in 12-hour format
-    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
-    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
-
-    // Format minutes as a two-digit string
+    let hour12 = hours % 12;
+    const amPm = hours >= 12 ? "PM" : "AM";
+    hour12 = hour12 === 0 ? 12 : hour12;
     const formattedMinutes = String(minutes).padStart(2, "0");
-
-    // Return formatted time in 12-hour format
     return `${hour12}:${formattedMinutes} ${amPm}`;
   }
 
   return (
     <>
-      <Card className="mb-3 position-relative p-3 shadow-sm rounded">
-        <Button
-          variant="outline-warning"
-          className="position-absolute top-0 end-0 m-2 p-1 border-0"
-          onClick={handleFavorite}
-        >
-          {isFavorited ? (
-            <StarFill size={20} color="gold" />
-          ) : (
-            <Star size={20} color="gray" />
-          )}
-        </Button>
-
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center">
-            <Card.Title>{name}</Card.Title>
+      <Card className="mb-3 position-relative shadow-sm rounded">
+        <Card.Header className="bg-white d-flex justify-content-between align-items-center py-2">
+          <div className="text-truncate pe-2" style={{ maxWidth: "80%" }}>
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{name}</Tooltip>}
+              trigger={['hover', 'focus']}
+            >
+              <h5 className="mb-0 fw-bold text-truncate">{name}</h5>
+            </OverlayTrigger>
+          </div>
+          <div className="d-flex">
             <Button
               variant="outline-primary"
-              className="border-0"
+              size="sm"
+              className="me-1 border-0"
               onClick={fetchUserProfile}
             >
-              <Person size={20} /> Profile
+              <Person size={18} />
+            </Button>
+            <Button
+              variant="outline-warning"
+              size="sm"
+              className="border-0"
+              onClick={handleFavorite}
+            >
+              {isFavorited ? (
+                <StarFill size={18} color="gold" />
+              ) : (
+                <Star size={18} color="gray" />
+              )}
             </Button>
           </div>
+        </Card.Header>
 
-          <Card.Subtitle className="mb-2 text-muted">
-            Request for a ride
-          </Card.Subtitle>
-          <Card.Text>
-            <strong>Destination: </strong>
-            {locationString}
-          </Card.Text>
-          <Card.Text>
-            <strong>Arrival Date: </strong>
-            {new Date(arrivaldate).toLocaleDateString()}
-          </Card.Text>
-          <Card.Text>
-            <strong>Arrival Time: </strong>
-            {convertTo12HourFormat(arrivaltime)}
-          </Card.Text>
-          <Card.Text>
-            <strong>Notes: </strong>
-            {notes || "No additional notes."}
-          </Card.Text>
-          <Card.Text>
-            <strong>Notes: </strong>
-            {notes || "No additional notes."}
-          </Card.Text>
+        <Card.Body className="py-2">
+          <div className="small text-muted mb-2">Request for a ride</div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <GeoAlt className="me-2 text-secondary" size={16} />
+            <div className="text-truncate">
+              <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>{formatLocation()}</Tooltip>}
+              >
+                <span className="small">{formatLocation()}</span>
+              </OverlayTrigger>
+            </div>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Calendar className="me-2 text-secondary" size={16} />
+            <span className="small">{new Date(arrivaldate).toLocaleDateString()}</span>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Clock className="me-2 text-secondary" size={16} />
+            <span className="small">{convertTo12HourFormat(arrivaltime)}</span>
+          </div>
+          
+          <div className="d-flex mb-2">
+            <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
+            <div>
+              {notes && notes.length > 80 ? (
+                <div className="small">
+                  {showFullNotes ? notes : truncateText(notes)}
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="p-0 ms-1" 
+                    onClick={() => setShowFullNotes(!showFullNotes)}
+                  >
+                    {showFullNotes ? "Show less" : "Show more"}
+                  </Button>
+                </div>
+              ) : (
+                <span className="small">{truncateText(notes)}</span>
+              )}
+            </div>
+          </div>
+          
           {wants && (
-            <Card.Text>
-              <strong>Wants: </strong>
-              {wants}
-            </Card.Text>
+            <div className="d-flex mb-2">
+              <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
+              <div>
+                {wants.length > 80 ? (
+                  <div className="small">
+                    <strong>Wants: </strong>
+                    {showFullWants ? wants : truncateText(wants)}
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="p-0 ms-1" 
+                      onClick={() => setShowFullWants(!showFullWants)}
+                    >
+                      {showFullWants ? "Show less" : "Show more"}
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="small"><strong>Wants: </strong>{truncateText(wants)}</span>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {isAccepted && (
+            <div className="alert alert-success py-1 px-2 mb-0 mt-2 small">
+              <Lock size={12} className="me-1" /> 
+              {isAcceptedByCurrentUser ? "You've accepted this request" : "Request accepted by another user"}
+            </div>
           )}
         </Card.Body>
 
-        <Card.Footer className="bg-white border-0 text-center">
+        <Card.Footer className="bg-white border-0 p-2">
           {renderFooterButton()}
         </Card.Footer>
       </Card>
@@ -314,7 +350,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
       {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
+          <Modal.Title className="h5">
             {userProfile ? userProfile.name : "Loading..."}
           </Modal.Title>
         </Modal.Header>
@@ -322,33 +358,33 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
           {userProfile ? (
             <>
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Name</div>
-                <div>{userProfile.name}</div>
+                <div className="fw-bold mb-1 small">Name</div>
+                <div className="text-break">{userProfile.name}</div>
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Email</div>
-                <div>{userProfile.email}</div>
+                <div className="fw-bold mb-1 small">Email</div>
+                <div className="text-break">{userProfile.email}</div>
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Contact</div>
+                <div className="fw-bold mb-1 small">Contact</div>
                 {userProfile.contactInfo?.length ? (
-                  <ul>
+                  <ul className="ps-3 mb-0">
                     {userProfile.contactInfo.map((info, idx) => (
-                      <li key={idx}>
+                      <li key={idx} className="text-break">
                         <strong>{info.type}:</strong> {info.value}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No contact information available</p>
+                  <p className="mb-0">No contact information available</p>
                 )}
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Vehicle Info</div>
-                <div>
+                <div className="fw-bold mb-1 small">Vehicle Info</div>
+                <div className="text-break">
                   {userProfile.vehicleid
                     ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
@@ -360,7 +396,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowProfile(false)}>
+          <Button variant="secondary" size="sm" onClick={() => setShowProfile(false)}>
             Close
           </Button>
         </Modal.Footer>
@@ -371,12 +407,13 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
         show={showUnacceptConfirmation}
         onHide={() => setShowUnacceptConfirmation(false)}
         centered
+        size="sm"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Unaccept</Modal.Title>
+          <Modal.Title className="h5">Confirm Unaccept</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>
+          <p className="small mb-0">
             Are you sure you want to unaccept this request? The requester will
             be notified, and it will be removed from your favorites.
           </p>
@@ -384,12 +421,13 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
         <Modal.Footer>
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => setShowUnacceptConfirmation(false)}
           >
             Cancel
           </Button>
-          <Button variant="warning" onClick={handleConfirmUnaccept}>
-            Confirm Unaccept
+          <Button variant="warning" size="sm" onClick={handleConfirmUnaccept}>
+            Confirm
           </Button>
         </Modal.Footer>
       </Modal>

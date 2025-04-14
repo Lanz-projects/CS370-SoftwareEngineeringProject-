@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person, People, StarFill } from "react-bootstrap-icons";
+import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Star, Person, People, StarFill, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
 import RequestToRideModal from "./RequestToRideModal";
 
 const OfferingCard = ({ offering, userFavorites = [] }) => {
@@ -17,25 +17,36 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     originalMaxSeats,
     waitingList = [],
   } = offering || {};
+  
   const [showProfile, setShowProfile] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [quickMessage, setQuickMessage] = useState("");
-
-  // Extract destination name from location object if available
-  const destination =
-    location?.formattedAddress ||
-    (location?.coordinates
-      ? `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`
-      : "Location not specified");
+  const [showFullNotes, setShowFullNotes] = useState(false);
 
   // Check if this offering is favorited with safe default
-  const isFavoritedStatus = Array.isArray(userFavorites)
+  const isFavorited = Array.isArray(userFavorites)
     ? userFavorites.includes(_id)
     : false;
 
-  // Favorite handler
-  const handleFavorite = async () => {
+  // Truncate longer text like in DashboardOfferingCard
+  const truncateText = (text, maxLength = 80) => {
+    if (!text) return "No additional notes.";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+
+  // Extract coordinates into more usable format
+  const formatLocation = () => {
+    if (location?.formattedAddress) return location.formattedAddress;
+    if (location?.coordinates) {
+      return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    }
+    return "Location not specified";
+  };
+
+  // Handle favorite
+  const handleFavorite = async (e) => {
+    e.stopPropagation(); // Prevent card click event
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -43,10 +54,9 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
         return;
       }
 
-      // URL for the API based on whether the offering is favorited or not
-      const url = isFavoritedStatus
-        ? "http://localhost:5000/api/user/remove-favorite" // Use the remove endpoint if it's already favorited
-        : "http://localhost:5000/api/user/favorite-offering"; // Use the add endpoint if it's not favorited
+      const url = isFavorited
+        ? "http://localhost:5000/api/user/remove-favorite"
+        : "http://localhost:5000/api/user/favorite-offering";
 
       const response = await fetch(url, {
         method: "PUT",
@@ -63,18 +73,18 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Offering added to favorites:", data.message);
         window.location.reload();
       } else {
-        console.error("Error adding offering to favorites:", data.error);
+        console.error("Error handling favorite:", data.error);
       }
     } catch (error) {
-      console.error("Error adding offering to favorites", error);
+      console.error("Error handling favorite:", error);
     }
   };
 
   // Fetch profile modal
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (e) => {
+    e.stopPropagation(); // Prevent card click event
     try {
       const response = await fetch(`/api/offering/${offering._id}`);
       if (!response.ok) {
@@ -90,91 +100,120 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     }
   };
 
-  if (!offering) {
-    return <Card className="mb-3 p-3">No offering data available</Card>;
-  }
-
   function convertTo12HourFormat(arrivalTime) {
     if (!arrivalTime) return;
 
     const [hours, minutes] = arrivalTime.split(":").map(Number);
-  
-    // Convert to 12-hour format
-    let hour12 = hours % 12; // Get hour in 12-hour format
-    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
-    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
-    
-    // Format minutes as a two-digit string
+    let hour12 = hours % 12;
+    const amPm = hours >= 12 ? "PM" : "AM";
+    hour12 = hour12 === 0 ? 12 : hour12;
     const formattedMinutes = String(minutes).padStart(2, "0");
-  
-    // Return formatted time in 12-hour format
     return `${hour12}:${formattedMinutes} ${amPm}`;
   }
 
-
+  if (!offering) {
+    return <Card className="mb-3 p-3">No offering data available</Card>;
+  }
 
   return (
     <>
-      <Card className="mb-3 position-relative p-3 shadow-sm rounded">
-        {/* ⭐ Star Button */}
-        <Button
-          variant="outline-warning"
-          className="position-absolute top-0 end-0 m-2 p-1 border-0"
-          onClick={handleFavorite}
-        >
-          {isFavoritedStatus ? (
-            <StarFill size={20} color="gold" />
-          ) : (
-            <Star size={20} color="gray" />
-          )}
-        </Button>
-
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center">
-            <Card.Title>{name}</Card.Title>
+      <Card className="mb-3 position-relative shadow-sm rounded">
+        <Card.Header className="bg-white d-flex justify-content-between align-items-center py-2">
+          <div className="text-truncate pe-2" style={{ maxWidth: "80%" }}>
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{name}</Tooltip>}
+              trigger={['hover', 'focus']}
+            >
+              <h5 className="mb-0 fw-bold text-truncate">{name}</h5>
+            </OverlayTrigger>
+          </div>
+          <div className="d-flex">
             <Button
               variant="outline-primary"
-              className="border-0"
+              size="sm"
+              className="me-1 border-0"
               onClick={fetchUserProfile}
             >
-              <Person size={20} /> Profile
+              <Person size={18} />
+            </Button>
+            <Button
+              variant="outline-warning"
+              size="sm"
+              className="border-0"
+              onClick={handleFavorite}
+            >
+              {isFavorited ? (
+                <StarFill size={18} color="gold" />
+              ) : (
+                <Star size={18} color="gray" />
+              )}
             </Button>
           </div>
+        </Card.Header>
 
-          <Card.Subtitle className="mb-2 text-muted">
-            Offering a Ride
-          </Card.Subtitle>
-          <Card.Text>
-            <strong>Destination: </strong>
-            {destination}
-          </Card.Text>
-          <Card.Text>
-            <strong>Arrival Date: </strong>
-            {new Date(arrivaldate).toLocaleDateString()}
-          </Card.Text>
+        <Card.Body className="py-2">
+          <div className="small text-muted mb-2">Offering a ride</div>
           
-          <Card.Text>
-            <strong>Arrival Time: </strong>
-            {convertTo12HourFormat(arrivaltime)}
-          </Card.Text>
-          <Card.Text>
-            <strong>Notes: </strong>
-            {notes || "No additional notes."}
-          </Card.Text>
+          <div className="d-flex align-items-center mb-2">
+            <GeoAlt className="me-2 text-secondary" size={16} />
+            <div className="text-truncate">
+              <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>{formatLocation()}</Tooltip>}
+              >
+                <span className="small">{formatLocation()}</span>
+              </OverlayTrigger>
+            </div>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Calendar className="me-2 text-secondary" size={16} />
+            <span className="small">{new Date(arrivaldate).toLocaleDateString()}</span>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Clock className="me-2 text-secondary" size={16} />
+            <span className="small">{convertTo12HourFormat(arrivaltime)}</span>
+          </div>
+          
+          <div className="d-flex mb-2">
+            <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
+            <div>
+              {notes && notes.length > 80 ? (
+                <div className="small">
+                  {showFullNotes ? notes : truncateText(notes)}
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="p-0 ms-1" 
+                    onClick={() => setShowFullNotes(!showFullNotes)}
+                  >
+                    {showFullNotes ? "Show less" : "Show more"}
+                  </Button>
+                </div>
+              ) : (
+                <span className="small">{truncateText(notes)}</span>
+              )}
+            </div>
+          </div>
 
-          <Card.Text className="d-flex align-items-center mb-1">
-            <Person className="me-2" />
-            <strong>Available Seats: {maxSeats} / {originalMaxSeats} </strong>
-          </Card.Text>
-          <Card.Text className="d-flex align-items-center">
-            <People className="me-2" />
-            <strong>Wait List: {waitingList.length}</strong>
-          </Card.Text>
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <div className="d-flex align-items-center">
+              <Person className="me-1 text-primary" size={16} />
+              <span className="small fw-bold">{maxSeats} / {originalMaxSeats || maxSeats} seats</span>
+            </div>
+            <div className="d-flex align-items-center">
+              <People className="me-1 text-secondary" size={16} />
+              <span className="small fw-bold">{waitingList.length} waiting</span>
+            </div>
+          </div>
         </Card.Body>
 
-        <Card.Footer className="bg-white border-0 text-center">
+        <Card.Footer className="bg-white border-0 p-2">
           <Button
             variant="primary"
+            size="sm"
             className="w-100"
             onClick={() => setShowRequestModal(true)}
             disabled={maxSeats === 0}
@@ -187,7 +226,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
       {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
+          <Modal.Title className="h5">
             {userProfile ? userProfile.name : "Loading..."}
           </Modal.Title>
         </Modal.Header>
@@ -195,33 +234,33 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
           {userProfile ? (
             <>
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Name</div>
-                <div>{userProfile.name}</div>
+                <div className="fw-bold mb-1 small">Name</div>
+                <div className="text-break">{userProfile.name}</div>
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Email</div>
-                <div>{userProfile.email}</div>
+                <div className="fw-bold mb-1 small">Email</div>
+                <div className="text-break">{userProfile.email}</div>
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Contact</div>
+                <div className="fw-bold mb-1 small">Contact</div>
                 {userProfile.contactInfo?.length ? (
-                  <ul>
+                  <ul className="ps-3 mb-0">
                     {userProfile.contactInfo.map((info, idx) => (
-                      <li key={idx}>
+                      <li key={idx} className="text-break">
                         <strong>{info.type}:</strong> {info.value}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No contact information available</p>
+                  <p className="mb-0">No contact information available</p>
                 )}
               </div>
 
               <div className="mb-2 p-2 border rounded">
-                <div className="fw-bold mb-1">Vehicle Info</div>
-                <div>
+                <div className="fw-bold mb-1 small">Vehicle Info</div>
+                <div className="text-break">
                   {userProfile.vehicleid
                     ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
@@ -233,7 +272,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowProfile(false)}>
+          <Button variant="secondary" size="sm" onClick={() => setShowProfile(false)}>
             Close
           </Button>
         </Modal.Footer>

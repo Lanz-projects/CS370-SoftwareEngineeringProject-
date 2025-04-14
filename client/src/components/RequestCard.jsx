@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, Modal } from "react-bootstrap";
-import { Star, Person, StarFill, Lock, Unlock } from "react-bootstrap-icons";
+import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Star, Person, StarFill, Lock, Unlock, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
 
 const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const {
@@ -14,20 +14,17 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
     _id,
     userAccepted,
   } = request;
+  
   const [showProfile, setShowProfile] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [showUnacceptConfirmation, setShowUnacceptConfirmation] =
-    useState(false);
+  const [showUnacceptConfirmation, setShowUnacceptConfirmation] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
-
-  // Extract destination name from location object if available
-  const destination =
-    location?.formattedAddress ||
-    `Longitude: ${location.coordinates[0]}, Latitude: ${location.coordinates[1]}`;
+  const [showFullNotes, setShowFullNotes] = useState(false);
+  const [showFullWants, setShowFullWants] = useState(false);
 
   // Check if this request is favorited
-  const isFavoritedStatus = userFavorites?.includes(_id) || false;
+  const isFavorited = userFavorites?.includes(_id) || false;
 
   // Check if request is already accepted
   const isAccepted = !!userAccepted;
@@ -38,23 +35,35 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   // Check if current user is the author of the request
   const isCurrentUserAuthor = userid === currentUserId;
 
+  // Truncate longer text
+  const truncateText = (text, maxLength = 80) => {
+    if (!text) return "No additional notes.";
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+
+  // Format location like in DashboardOfferingCard
+  const formatLocation = () => {
+    if (location?.formattedAddress) return location.formattedAddress;
+    if (location?.coordinates) {
+      return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    }
+    return "Location not specified";
+  };
+
   // Fetch current user's ID on component mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem("token");
-
         if (!token) {
           console.error("No token found in local storage");
           return;
         }
-
         const response = await fetch("http://localhost:5000/api/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (response.ok) {
           const userData = await response.json();
           setCurrentUserId(userData.user.uid);
@@ -65,12 +74,12 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         console.error("Error fetching current user:", error);
       }
     };
-
     fetchCurrentUser();
   }, []);
 
   // Function to fetch user profile
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (e) => {
+    e && e.stopPropagation(); // Prevent card click event if event exists
     try {
       const response = await fetch(`http://localhost:5000/api/request/${_id}`);
       const data = await response.json();
@@ -84,11 +93,11 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   };
 
   // Handle the "star" button click to favorite a request
-  const handleFavorite = async () => {
+  const handleFavorite = async (e) => {
+    e && e.stopPropagation(); // Prevent card click event if event exists
     try {
       const token = localStorage.getItem("token");
-
-      const url = isFavoritedStatus
+      const url = isFavorited
         ? "http://localhost:5000/api/user/remove-favorite"
         : "http://localhost:5000/api/user/favorite-request";
 
@@ -130,7 +139,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const handleConfirm = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const acceptResponse = await fetch(
         `http://localhost:5000/api/accept-request/${_id}`,
         {
@@ -145,7 +153,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       const acceptData = await acceptResponse.json();
 
       if (acceptResponse.ok) {
-        if (!isFavoritedStatus) {
+        if (!isFavorited) {
           await fetch("http://localhost:5000/api/user/favorite-request", {
             method: "PUT",
             headers: {
@@ -159,7 +167,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           });
           window.location.reload();
         }
-
         console.log("Request accepted successfully:", acceptData.message);
         setShowConfirmation(false);
         if (onAcceptComplete) onAcceptComplete();
@@ -177,7 +184,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
   const handleConfirmUnaccept = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const unacceptResponse = await fetch(
         `http://localhost:5000/api/unaccept-request/${_id}`,
         {
@@ -192,7 +198,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       const unacceptData = await unacceptResponse.json();
 
       if (unacceptResponse.ok) {
-        if (isFavoritedStatus) {
+        if (isFavorited) {
           await fetch("http://localhost:5000/api/user/remove-favorite", {
             method: "PUT",
             headers: {
@@ -206,7 +212,6 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           });
           window.location.reload();
         }
-
         console.log("Request unaccepted successfully:", unacceptData.message);
         setShowUnacceptConfirmation(false);
         if (onAcceptComplete) onAcceptComplete();
@@ -222,101 +227,144 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
 
   function convertTo12HourFormat(arrivalTime) {
     if (!arrivalTime) return;
-
     const [hours, minutes] = arrivalTime.split(":").map(Number);
-
-    // Convert to 12-hour format
-    let hour12 = hours % 12; // Get hour in 12-hour format
-    const amPm = hours >= 12 ? "PM" : "AM"; // Determine AM/PM
-    hour12 = hour12 === 0 ? 12 : hour12; // Handle midnight (00:xx -> 12:xx)
-
-    // Format minutes as a two-digit string
+    let hour12 = hours % 12;
+    const amPm = hours >= 12 ? "PM" : "AM";
+    hour12 = hour12 === 0 ? 12 : hour12;
     const formattedMinutes = String(minutes).padStart(2, "0");
-
-    // Return formatted time in 12-hour format
     return `${hour12}:${formattedMinutes} ${amPm}`;
   }
 
   return (
     <>
-      <Card className="mb-3 position-relative p-3 shadow-sm rounded">
-        {/* Star Button - Top Right */}
-        <Button
-          variant="outline-warning"
-          className="position-absolute top-0 end-0 m-2 p-1 border-0"
-          onClick={handleFavorite}
-        >
-          {isFavoritedStatus ? (
-            <StarFill size={20} color="gold" />
-          ) : (
-            <Star size={20} color="gray" />
-          )}
-        </Button>
-
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-center">
-            <Card.Title>{name}</Card.Title>
+      <Card className="mb-3 position-relative shadow-sm rounded">
+        <Card.Header className="bg-white d-flex justify-content-between align-items-center py-2">
+          <div className="text-truncate pe-2" style={{ maxWidth: "80%" }}>
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{name}</Tooltip>}
+              trigger={['hover', 'focus']}
+            >
+              <h5 className="mb-0 fw-bold text-truncate">{name}</h5>
+            </OverlayTrigger>
+          </div>
+          <div className="d-flex">
             <Button
               variant="outline-primary"
-              className="border-0"
+              size="sm"
+              className="me-1 border-0"
               onClick={fetchUserProfile}
             >
-              <Person size={20} /> Profile
+              <Person size={18} />
+            </Button>
+            <Button
+              variant="outline-warning"
+              size="sm"
+              className="border-0"
+              onClick={handleFavorite}
+            >
+              {isFavorited ? (
+                <StarFill size={18} color="gold" />
+              ) : (
+                <Star size={18} color="gray" />
+              )}
             </Button>
           </div>
+        </Card.Header>
 
-          <Card.Subtitle className="mb-2 text-muted">
-            Request for a ride
-          </Card.Subtitle>
-          <Card.Text>
-            <strong>Destination: </strong>
-            {destination}
-          </Card.Text>
-          <Card.Text>
-            <strong>Arrival Date: </strong>
-            {new Date(arrivaldate).toLocaleDateString()}
-          </Card.Text>
-          <Card.Text>
-            <strong>Arrival Time: </strong>
-            {convertTo12HourFormat(arrivaltime)}
-          </Card.Text>
-          <Card.Text>
-            <strong>Notes: </strong>
-            {notes || "No additional notes."}
-          </Card.Text>
-          <Card.Text>
-            <strong>Notes: </strong>
-            {notes || "No additional notes."}
-          </Card.Text>
+        <Card.Body className="py-2">
+          <div className="small text-muted mb-2">Request for a ride</div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <GeoAlt className="me-2 text-secondary" size={16} />
+            <div className="text-truncate">
+              <OverlayTrigger
+                placement="top"
+                overlay={<Tooltip>{formatLocation()}</Tooltip>}
+              >
+                <span className="small">{formatLocation()}</span>
+              </OverlayTrigger>
+            </div>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Calendar className="me-2 text-secondary" size={16} />
+            <span className="small">{new Date(arrivaldate).toLocaleDateString()}</span>
+          </div>
+          
+          <div className="d-flex align-items-center mb-2">
+            <Clock className="me-2 text-secondary" size={16} />
+            <span className="small">{convertTo12HourFormat(arrivaltime)}</span>
+          </div>
+          
+          <div className="d-flex mb-2">
+            <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
+            <div>
+              {notes && notes.length > 80 ? (
+                <div className="small">
+                  {showFullNotes ? notes : truncateText(notes)}
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="p-0 ms-1" 
+                    onClick={() => setShowFullNotes(!showFullNotes)}
+                  >
+                    {showFullNotes ? "Show less" : "Show more"}
+                  </Button>
+                </div>
+              ) : (
+                <span className="small">{truncateText(notes)}</span>
+              )}
+            </div>
+          </div>
+          
           {wants && (
-            <Card.Text>
-              <strong>Wants: </strong>
-              {wants}
-            </Card.Text>
+            <div className="d-flex mb-2">
+              <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
+              <div>
+                {wants.length > 80 ? (
+                  <div className="small">
+                    <strong>Wants: </strong>
+                    {showFullWants ? wants : truncateText(wants)}
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="p-0 ms-1" 
+                      onClick={() => setShowFullWants(!showFullWants)}
+                    >
+                      {showFullWants ? "Show less" : "Show more"}
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="small"><strong>Wants: </strong>{wants}</span>
+                )}
+              </div>
+            </div>
           )}
         </Card.Body>
 
-        <Card.Footer className="bg-white border-0 text-center">
+        <Card.Footer className="bg-white border-0 p-2">
           {isAccepted ? (
             isAcceptedByCurrentUser ? (
               <Button
                 variant="warning"
                 className="w-100"
+                size="sm"
                 onClick={handleUnaccept}
               >
                 <Unlock size={16} className="me-1" /> Unaccept
               </Button>
             ) : (
-              <Button variant="secondary" className="w-100" disabled>
+              <Button variant="secondary" className="w-100" size="sm" disabled>
                 <Lock size={16} className="me-1" /> Already Accepted
               </Button>
             )
           ) : isCurrentUserAuthor ? (
-            <Button variant="secondary" className="w-100" disabled>
+            <Button variant="secondary" className="w-100" size="sm" disabled>
               <Lock size={16} className="me-1" /> Your Own Request
             </Button>
           ) : (
-            <Button variant="success" className="w-100" onClick={handleAccept}>
+            <Button variant="success" className="w-100" size="sm" onClick={handleAccept}>
               Accept
             </Button>
           )}
@@ -326,38 +374,45 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
+          <Modal.Title className="h5">
             {userProfile ? userProfile.name : "Loading..."}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {userProfile ? (
             <>
-              <div className="mb-3 p-2 border rounded">
-                <strong>Name:</strong> {userProfile.name}
+              <div className="mb-2 p-2 border rounded">
+                <div className="fw-bold mb-1 small">Name</div>
+                <div className="text-break">{userProfile.name}</div>
               </div>
-              <div className="mb-3 p-2 border rounded">
-                <strong>Email:</strong> {userProfile.email}
+
+              <div className="mb-2 p-2 border rounded">
+                <div className="fw-bold mb-1 small">Email</div>
+                <div className="text-break">{userProfile.email}</div>
               </div>
-              <div className="mb-3 p-2 border rounded">
-                <strong>Contact Info:</strong>
-                {userProfile.contactInfo?.length > 0 ? (
-                  <ul>
-                    {userProfile.contactInfo.map((info, index) => (
-                      <li key={index}>
+
+              <div className="mb-2 p-2 border rounded">
+                <div className="fw-bold mb-1 small">Contact</div>
+                {userProfile.contactInfo?.length ? (
+                  <ul className="ps-3 mb-0">
+                    {userProfile.contactInfo.map((info, idx) => (
+                      <li key={idx} className="text-break">
                         <strong>{info.type}:</strong> {info.value}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>No contact information available</p>
+                  <p className="mb-0">No contact information available</p>
                 )}
               </div>
-              <div className="mb-3 p-2 border rounded">
-                <strong>Vehicle Info:</strong>{" "}
-                {userProfile.vehicleid
-                  ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
-                  : "No vehicle assigned"}
+
+              <div className="mb-2 p-2 border rounded">
+                <div className="fw-bold mb-1 small">Vehicle Info</div>
+                <div className="text-break">
+                  {userProfile.vehicleid
+                    ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
+                    : "No vehicle assigned"}
+                </div>
               </div>
             </>
           ) : (
@@ -365,7 +420,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowProfile(false)}>
+          <Button variant="secondary" size="sm" onClick={() => setShowProfile(false)}>
             Close
           </Button>
         </Modal.Footer>
@@ -376,12 +431,13 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         show={showConfirmation}
         onHide={() => setShowConfirmation(false)}
         centered
+        size="sm"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Acceptance</Modal.Title>
+          <Modal.Title className="fs-5">Confirm Acceptance</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>
+          <p className="mb-0 small">
             Click confirm and the requester will be notified that you took on
             their request. This will also show up in your favorites on the
             dashboard.
@@ -390,11 +446,12 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         <Modal.Footer>
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => setShowConfirmation(false)}
           >
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleConfirm}>
+          <Button variant="primary" size="sm" onClick={handleConfirm}>
             Confirm
           </Button>
         </Modal.Footer>
@@ -405,12 +462,13 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         show={showUnacceptConfirmation}
         onHide={() => setShowUnacceptConfirmation(false)}
         centered
+        size="sm"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Unaccept</Modal.Title>
+          <Modal.Title className="fs-5">Confirm Unaccept</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>
+          <p className="mb-0 small">
             Are you sure you want to unaccept this request? The requester will
             be notified, and it will be removed from your favorites.
           </p>
@@ -418,11 +476,12 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         <Modal.Footer>
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => setShowUnacceptConfirmation(false)}
           >
             Cancel
           </Button>
-          <Button variant="warning" onClick={handleConfirmUnaccept}>
+          <Button variant="warning" size="sm" onClick={handleConfirmUnaccept}>
             Confirm Unaccept
           </Button>
         </Modal.Footer>
