@@ -3,7 +3,7 @@ import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Star, Person, StarFill, People, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
 import CombinedWaitlistModal from "./CombinedWaitlistModal";
 
-const DashboardOfferingCard = ({ offering, userFavorites }) => {
+const DashboardOfferingCard = ({ offering, userFavorites, showLocationName = false }) => {
   const {
     name,
     location,
@@ -24,20 +24,22 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [showFullNotes, setShowFullNotes] = useState(false);
 
-  // Calculate total capacity
-  const totalCapacity =
-    originalMaxSeats || maxSeats + acceptedUsers?.length || 0;
+  const totalCapacity = originalMaxSeats || maxSeats + acceptedUsers?.length || 0;
   const isFavorited = userFavorites.includes(_id);
   
-  // Truncate longer text
   const truncateText = (text, maxLength = 80) => {
     if (!text) return "No additional notes.";
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
-  // Extract coordinates into more usable format
   const formatLocation = () => {
-    return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    if (location?.formattedAddress) {
+      return location.formattedAddress;
+    }
+    if (location?.coordinates) {
+      return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    }
+    return "Location not specified";
   };
 
   const handleFavorite = async () => {
@@ -237,14 +239,12 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
         </Card.Footer>
       </Card>
 
-      {/* Combined modal for managing waitlisted and accepted users */}
       <CombinedWaitlistModal
         offeringId={_id}
         showModal={showModal}
         handleCloseModal={() => setShowModal(false)}
       />
 
-      {/* Profile Modal */}
       <Modal show={showProfile} onHide={() => setShowProfile(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title className="h5">
