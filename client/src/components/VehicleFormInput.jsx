@@ -12,6 +12,7 @@ function VehicleFormInput() {
   const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const user = CheckUserLogged();
   const navigate = useNavigate();
@@ -26,6 +27,13 @@ function VehicleFormInput() {
   if (user === undefined) {
     return <div>Loading...</div>;
   }
+
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification({ message: "", type: "" });
+    }, 3000);
+  };
 
   const validateInput = () => {
     const selectedColor = color === "Other" ? customColor : color;
@@ -43,7 +51,7 @@ function VehicleFormInput() {
     e.preventDefault();
 
     if (!token) {
-      alert("Authentication token missing. Please log in again.");
+      showNotification("Authentication token missing. Please log in again.", "error");
       navigate("/login");
       return;
     }
@@ -65,20 +73,31 @@ function VehicleFormInput() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Vehicle added successfully!");
-        navigate("/profile");
+        showNotification("Vehicle added successfully!");
       } else {
-        alert("Error: " + data.error);
+        showNotification("Error: " + data.error, "error");
       }
     } catch (error) {
       console.error("Error adding vehicle:", error);
-      alert("Failed to add vehicle.");
+      showNotification("Failed to add vehicle. Please try again later.", "error");
     }
+  };
+
+  const handleExit = () => {
+    navigate('/profile');
   };
 
   return (
     <div className="container mt-4">
       <h2>Add Vehicle</h2>
+      
+      {notification.message && (
+        <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">
+          {notification.message}
+          <button type="button" className="btn-close" onClick={() => setNotification({ message: "", type: "" })} aria-label="Close"></button>
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="color" className="form-label">Color:</label>
@@ -137,7 +156,10 @@ function VehicleFormInput() {
 
         {error && <div className="text-danger">{error}</div>}
 
-        <button type="submit" className="btn btn-primary mt-3">Save Vehicle</button>
+        <div className="d-flex gap-2 mt-3">
+          <button type="submit" className="btn btn-primary">Save Vehicle</button>
+          <button type="button" className="btn btn-secondary" onClick={handleExit}>Exit</button>
+        </div>
       </form>
     </div>
   );

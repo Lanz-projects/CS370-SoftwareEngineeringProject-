@@ -31,7 +31,7 @@ const RequestToRideModal = ({
       const data = await response.json();
   
       if (response.ok) {
-        alert("Ride request sent successfully!");
+        //alert("Ride request sent successfully!");
         setQuickMessage(""); // Clear the message after sending
         // Call the callback function to update the parent component
         if (onRequestSuccess) {

@@ -1,7 +1,7 @@
 // InfoPopup.jsx
 import { useState } from "react";
 
-function InfoPopup() {
+function ProfieFormInfoPopup() {
   const [showPopup, setShowPopup] = useState(false);
 
   return (
@@ -127,4 +127,4 @@ function InfoPopup() {
   );
 }
 
-export default InfoPopup;
+export default ProfieFormInfoPopup;

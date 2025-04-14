@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
+import RequestRideInfoPopup from './RequestRideInfoPopup';
 
 const RequestRide = ({ show, handleClose, onRequestCreated }) => {
   const [name, setName] = useState("");
@@ -266,6 +267,8 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       </Modal.Header>
       <Modal.Body>
         {message && <Alert variant={message.type}>{message.text}</Alert>}
+
+        <RequestRideInfoPopup />
 
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">

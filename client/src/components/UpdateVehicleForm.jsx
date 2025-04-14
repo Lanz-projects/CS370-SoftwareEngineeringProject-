@@ -12,6 +12,7 @@ function UpdateVehicleForm() {
   const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
   
   const user = CheckUserLogged();
   const navigate = useNavigate();
@@ -24,6 +25,13 @@ function UpdateVehicleForm() {
       fetchVehicleData();
     }
   }, [user, navigate]);
+
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification({ message: "", type: "" });
+    }, 3000);
+  };
 
   const fetchVehicleData = async () => {
     try {
@@ -46,6 +54,7 @@ function UpdateVehicleForm() {
       }
     } catch (error) {
       console.error("Error fetching vehicle data:", error);
+      showNotification("Unable to fetch vehicle data. Please try again later.", "error");
     }
   };
 
@@ -64,6 +73,12 @@ function UpdateVehicleForm() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
+    if (!token) {
+      showNotification("Authentication token missing. Please log in again.", "error");
+      navigate("/login");
+      return;
+    }
+
     if (!validateInput()) return;
 
     const selectedColor = color === "Other" ? customColor : color;
@@ -81,20 +96,31 @@ function UpdateVehicleForm() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Vehicle updated successfully!");
-        navigate("/profile");
+        showNotification("Vehicle updated successfully!");
       } else {
-        alert("Error: " + data.error);
+        showNotification("Error: " + data.error, "error");
       }
     } catch (error) {
       console.error("Error updating vehicle:", error);
-      alert("Failed to update vehicle.");
+      showNotification("Failed to update vehicle. Please try again later.", "error");
     }
+  };
+
+  const handleExit = () => {
+    navigate('/profile');
   };
 
   return (
     <div className="container mt-4">
       <h2>Update Vehicle</h2>
+      
+      {notification.message && (
+        <div className={`alert ${notification.type === "error" ? "alert-danger" : "alert-success"} alert-dismissible fade show`} role="alert">
+          {notification.message}
+          <button type="button" className="btn-close" onClick={() => setNotification({ message: "", type: "" })} aria-label="Close"></button>
+        </div>
+      )}
+      
       <form onSubmit={handleUpdate}>
         <div className="mb-3">
           <label htmlFor="color" className="form-label">Color:</label>
@@ -127,7 +153,10 @@ function UpdateVehicleForm() {
 
         {error && <div className="text-danger">{error}</div>}
 
-        <button type="submit" className="btn btn-primary mt-3">Update Vehicle</button>
+        <div className="d-flex gap-2 mt-3">
+          <button type="submit" className="btn btn-primary">Update Vehicle</button>
+          <button type="button" className="btn btn-secondary" onClick={handleExit}>Exit</button>
+        </div>
       </form>
     </div>
   );

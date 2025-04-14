@@ -74,7 +74,7 @@ const WaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
         setWaitlistedUsers((prevUsers) =>
           prevUsers.filter((user) => user._id !== userId)
         );
-        alert("User has been accepeted.");
+        //alert("User has been accepeted.");
       } else {
         //console.error("Error moving user to accepted:", data.error);
         alert("Either the user isn't in the waitlist or they are in the accepted list.")

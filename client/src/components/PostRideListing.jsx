@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import PostRideListingInfoPopup from "./PostRideListingInfoPopUp";
 
 const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
   const [name, setName] = useState("");
@@ -306,7 +307,9 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
             </div>
           </Alert>
         )}
-
+        
+        <PostRideListingInfoPopup />
+        
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Your Name</Form.Label>

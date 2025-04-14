@@ -63,7 +63,7 @@ const ProfileLayout = () => {
         
         navigate('/');
       } else {
-        alert(`Error: ${data.error}`);
+        alert(`Error: ${data.error}. Try again later.`);
       }
     } catch (error) {
       console.error("Deletion error:", error);

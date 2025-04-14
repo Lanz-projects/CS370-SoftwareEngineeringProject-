@@ -8,7 +8,7 @@ export const handleLogout = async (navigate) => {
     await signOut(auth);
     console.log("User signed out successfully");
 
-    alert("Logged Out");
+    //alert("Logged Out");
 
     if (typeof navigate === "function") {
       navigate("/"); 
