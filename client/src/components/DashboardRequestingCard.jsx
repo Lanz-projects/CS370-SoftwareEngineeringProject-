@@ -35,7 +35,13 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
 
   // Format location to be more readable
   const formatLocation = () => {
-    return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    if (location?.formattedAddress) {
+      return location.formattedAddress;
+    }
+    if (location?.coordinates) {
+      return `${location.coordinates[0].toFixed(4)}, ${location.coordinates[1].toFixed(4)}`;
+    }
+    return "Location not specified";
   };
 
   // Fetch current user's ID on component mount
