@@ -386,7 +386,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
                 <div className="fw-bold mb-1 small">Vehicle Info</div>
                 <div className="text-break">
                   {userProfile.vehicleid
-                    ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
+                    ? `${userProfile.vehicleid.color} ${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
                 </div>
               </div>

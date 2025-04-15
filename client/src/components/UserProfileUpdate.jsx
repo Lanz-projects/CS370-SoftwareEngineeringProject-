@@ -9,8 +9,11 @@ function UserProfileUpdate() {
   const [contactType, setContactType] = useState("phone");
   const [platform, setPlatform] = useState("");
   const [value, setValue] = useState("");
-  const [nameError, setNameError] = useState(""); 
-  const [emailError, setEmailError] = useState("");
+  const [errors, setErrors] = useState({
+    name: "",
+    platform: "",
+    value: ""
+  });
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   const user = CheckUserLogged();
@@ -56,26 +59,59 @@ function UserProfileUpdate() {
   };
 
   const validateName = (name) => {
+    if (!name.trim()) {
+      setErrors(prev => ({ ...prev, name: "Name is required" }));
+      return false;
+    }
+    
     const regex = /^[a-zA-Z\s]*$/;
     if (!name.match(regex)) {
-      setNameError("Name must only contain letters and spaces.");
+      setErrors(prev => ({ ...prev, name: "Name must only contain letters and spaces." }));
       return false;
     }
+    
     if (name.length > 50) {
-      setNameError("Name cannot exceed 50 characters.");
+      setErrors(prev => ({ ...prev, name: "Name cannot exceed 50 characters." }));
       return false;
     }
-    setNameError(""); 
+    
+    setErrors(prev => ({ ...prev, name: "" }));
     return true;
   };
 
   const validateEmail = (email) => {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    if (!email.match(regex)) {
-      setEmailError("Please enter a valid email address.");
+    if (!email.trim()) {
+      setErrors(prev => ({ ...prev, value: "Email is required" }));
       return false;
     }
-    setEmailError(""); 
+    
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    if (!email.match(regex)) {
+      setErrors(prev => ({ ...prev, value: "Please enter a valid email address." }));
+      return false;
+    }
+    
+    setErrors(prev => ({ ...prev, value: "" }));
+    return true;
+  };
+
+  const validateContactValue = (value) => {
+    if (!value.trim()) {
+      setErrors(prev => ({ ...prev, value: `${contactType === "phone" ? "Phone number" : "Contact value"} is required` }));
+      return false;
+    }
+    
+    setErrors(prev => ({ ...prev, value: "" }));
+    return true;
+  };
+
+  const validatePlatform = (platform) => {
+    if (contactType === "social" && !platform.trim()) {
+      setErrors(prev => ({ ...prev, platform: "Platform is required" }));
+      return false;
+    }
+    
+    setErrors(prev => ({ ...prev, platform: "" }));
     return true;
   };
 
@@ -89,32 +125,44 @@ function UserProfileUpdate() {
   };
 
   const handleAddContactAndUpdate = async () => {
-    // If there's a value to add, add it first
+    // Validate name first
+    if (!validateName(name)) return;
+    
+    // Check if we need to add a new contact
+    let updatedContacts = [...contactInfos];
+    
     if (value.trim()) {
-      if (contactType === "social" && !platform.trim()) {
-        showNotification("Please select a social media platform", "error");
-        return;
+      // Validate contact inputs if there's a value to add
+      let isValid = true;
+      
+      if (contactType === "social" && !validatePlatform(platform)) {
+        isValid = false;
       }
-
-      if (contactType === "email" && !validateEmail(value)) {
-        return; 
+      
+      if (contactType === "email") {
+        if (!validateEmail(value)) {
+          isValid = false;
+        }
+      } else if (!validateContactValue(value)) {
+        isValid = false;
       }
-
+      
+      if (!isValid) return;
+      
+      // Add the new contact info
       const newContactInfo = { type: contactType, value };
-
       if (contactType === "social") {
         newContactInfo.platform = platform;
       }
-
-      // Add the new contact info
-      setContactInfos(prevContactInfos => [...prevContactInfos, newContactInfo]);
-      setContactType("phone");
-      setValue("");
-      setPlatform("");
+      
+      updatedContacts = [...contactInfos, newContactInfo];
     }
-
-    // Then handle the update submission
-    if (!validateName(name) || contactInfos.length === 0) return;
+    
+    // Validate that we have at least one contact
+    if (updatedContacts.length === 0) {
+      showNotification("At least one contact method is required", "error");
+      return;
+    }
 
     try {
       const response = await fetch("http://localhost:5000/api/user", {
@@ -125,15 +173,21 @@ function UserProfileUpdate() {
         },
         body: JSON.stringify({ 
           name, 
-          contactInfo: value.trim() 
-            ? [...contactInfos, { type: contactType, value, ...(contactType === "social" ? { platform } : {}) }]
-            : contactInfos 
+          contactInfo: updatedContacts
         }),
       });
 
       const data = await response.json();
       if (response.ok) {
         showNotification("Your profile has been successfully updated!");
+        // Update the state to show the new contacts
+        setContactInfos(updatedContacts);
+        // Clear form inputs
+        if (value.trim()) {
+          setContactType("phone");
+          setValue("");
+          setPlatform("");
+        }
       } else {
         showNotification(`Unable to update profile: ${data.error}`, "error");
       }
@@ -166,14 +220,14 @@ function UserProfileUpdate() {
           <label htmlFor="username" className="form-label">Name:</label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             id="username"
             autoComplete="off"
           />
-          {nameError && <div className="text-danger">{nameError}</div>} 
+          {errors.name && <div className="invalid-feedback">{errors.name}</div>}
         </div>
 
         <div className="mb-3">
@@ -195,7 +249,7 @@ function UserProfileUpdate() {
           <div className="mb-3">
             <label htmlFor="socialPlatform" className="form-label">Social Platform:</label>
             <select
-              className="form-select"
+              className={`form-select ${errors.platform ? 'is-invalid' : ''}`}
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
               id="socialPlatform"
@@ -206,6 +260,7 @@ function UserProfileUpdate() {
                 <option key={plat} value={plat}>{plat}</option>
               ))}
             </select>
+            {errors.platform && <div className="invalid-feedback">{errors.platform}</div>}
           </div>
         )}
 
@@ -213,7 +268,7 @@ function UserProfileUpdate() {
           <label htmlFor="contactval" className="form-label">Contact Value:</label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${errors.value ? 'is-invalid' : ''}`}
             value={value}
             onChange={(e) => setValue(contactType === "phone" ? e.target.value.replace(/\D/g, "") : e.target.value)}
             id="contactval"
@@ -221,19 +276,25 @@ function UserProfileUpdate() {
             maxLength={contactType === "phone" ? 16 : undefined}
             placeholder={contactType === "phone" ? "Enter phone number" : "Enter contact info"}
           />
-          {emailError && <div className="text-danger">{emailError}</div>} 
+          {errors.value && <div className="invalid-feedback">{errors.value}</div>}
         </div>
 
         <div className="mt-4">
           <h4>Added Contact Info:</h4>
-          <ul>
-            {contactInfos.map((contact, index) => (
-              <li key={index}>
-                {contact.type} - {contact.value} {contact.platform && `(${contact.platform})`}
-                <button type="button" className="btn btn-danger btn-sm ms-2" onClick={() => handleDeleteContactInfo(index)}>Delete</button>
-              </li>
-            ))}
-          </ul>
+          {contactInfos.length > 0 ? (
+            <ul className="list-group">
+              {contactInfos.map((contact, index) => (
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  <span>
+                    <strong>{contact.type}</strong> - {contact.value} {contact.platform && `(${contact.platform})`}
+                  </span>
+                  <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDeleteContactInfo(index)}>Delete</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-danger">No contact information added. At least one contact method is required.</p>
+          )}
         </div>
 
         <div className="d-flex gap-2 mt-3">

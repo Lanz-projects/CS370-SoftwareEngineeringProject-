@@ -206,7 +206,7 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
           <div className="d-flex justify-content-between align-items-center mt-3">
             <div className="d-flex align-items-center">
               <Person className="me-1 text-primary" size={16} />
-              <span className="small fw-bold">{maxSeats} / {totalCapacity} seats</span>
+              <span className="small fw-bold">{maxSeats} / {totalCapacity} Available Seats</span>
             </div>
             <div className="d-flex align-items-center">
               <People className="me-1 text-secondary" size={16} />
@@ -283,7 +283,7 @@ const DashboardOfferingCard = ({ offering, userFavorites }) => {
                 <div className="fw-bold mb-1 small">Vehicle Info</div>
                 <div className="text-break">
                   {userProfile.vehicleid
-                    ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
+                    ? `${userProfile.vehicleid.color} ${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
                 </div>
               </div>

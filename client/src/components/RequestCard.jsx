@@ -117,6 +117,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
       if (response.ok) {
         console.log("Request favorite status updated:", data.message);
         if (onAcceptComplete) onAcceptComplete();
+        window.location.reload();
       } else {
         console.error("Error updating favorite status:", data.error);
       }
@@ -169,6 +170,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
         }
         console.log("Request accepted successfully:", acceptData.message);
         setShowConfirmation(false);
+        window.location.reload();
         if (onAcceptComplete) onAcceptComplete();
       } else {
         console.error("Error accepting request:", acceptData.error);
@@ -410,7 +412,7 @@ const RequestCard = ({ request, userFavorites, onAcceptComplete }) => {
                 <div className="fw-bold mb-1 small">Vehicle Info</div>
                 <div className="text-break">
                   {userProfile.vehicleid
-                    ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
+                    ? `${userProfile.vehicleid.color} ${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
                 </div>
               </div>

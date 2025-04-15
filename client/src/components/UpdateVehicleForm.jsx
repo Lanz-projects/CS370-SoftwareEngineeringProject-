@@ -11,7 +11,13 @@ function UpdateVehicleForm() {
   const [make, setMake] = useState(commonMakes[0]);
   const [customMake, setCustomMake] = useState("");
   const [model, setModel] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    color: "",
+    customColor: "",
+    make: "",
+    customMake: "",
+    model: ""
+  });
   const [notification, setNotification] = useState({ message: "", type: "" });
   
   const user = CheckUserLogged();
@@ -59,15 +65,35 @@ function UpdateVehicleForm() {
   };
 
   const validateInput = () => {
-    const selectedColor = color === "Other" ? customColor : color;
-    const selectedMake = make === "Other" ? customMake : make;
+    let isValid = true;
+    const newErrors = {
+      color: "",
+      customColor: "",
+      make: "",
+      customMake: "",
+      model: ""
+    };
     
-    if (!selectedColor.trim() || !selectedMake.trim() || !model.trim()) {
-      setError("All fields are required.");
-      return false;
+    // Check model field
+    if (!model.trim()) {
+      newErrors.model = "Model is required";
+      isValid = false;
     }
-    setError("");
-    return true;
+    
+    // Check color and customColor if "Other" is selected
+    if (color === "Other" && !customColor.trim()) {
+      newErrors.customColor = "Custom color is required when 'Other' is selected";
+      isValid = false;
+    }
+    
+    // Check make and customMake if "Other" is selected
+    if (make === "Other" && !customMake.trim()) {
+      newErrors.customMake = "Custom make is required when 'Other' is selected";
+      isValid = false;
+    }
+    
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleUpdate = async (e) => {
@@ -130,7 +156,16 @@ function UpdateVehicleForm() {
             ))}
           </select>
           {color === "Other" && (
-            <input type="text" className="form-control mt-2" placeholder="Enter custom color" value={customColor} onChange={(e) => setCustomColor(e.target.value)} />
+            <>
+              <input 
+                type="text" 
+                className={`form-control mt-2 ${errors.customColor ? 'is-invalid' : ''}`} 
+                placeholder="Enter custom color" 
+                value={customColor} 
+                onChange={(e) => setCustomColor(e.target.value)} 
+              />
+              {errors.customColor && <div className="invalid-feedback">{errors.customColor}</div>}
+            </>
           )}
         </div>
 
@@ -142,16 +177,30 @@ function UpdateVehicleForm() {
             ))}
           </select>
           {make === "Other" && (
-            <input type="text" className="form-control mt-2" placeholder="Enter custom make" value={customMake} onChange={(e) => setCustomMake(e.target.value)} />
+            <>
+              <input 
+                type="text" 
+                className={`form-control mt-2 ${errors.customMake ? 'is-invalid' : ''}`} 
+                placeholder="Enter custom make" 
+                value={customMake} 
+                onChange={(e) => setCustomMake(e.target.value)} 
+              />
+              {errors.customMake && <div className="invalid-feedback">{errors.customMake}</div>}
+            </>
           )}
         </div>
 
         <div className="mb-3">
           <label htmlFor="model" className="form-label">Model:</label>
-          <input id="model" type="text" className="form-control" value={model} onChange={(e) => setModel(e.target.value)} required />
+          <input 
+            id="model" 
+            type="text" 
+            className={`form-control ${errors.model ? 'is-invalid' : ''}`} 
+            value={model} 
+            onChange={(e) => setModel(e.target.value)} 
+          />
+          {errors.model && <div className="invalid-feedback">{errors.model}</div>}
         </div>
-
-        {error && <div className="text-danger">{error}</div>}
 
         <div className="d-flex gap-2 mt-3">
           <button type="submit" className="btn btn-primary">Update Vehicle</button>

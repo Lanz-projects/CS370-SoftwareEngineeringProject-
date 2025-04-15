@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Star, Person, People, StarFill, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
 import RequestToRideModal from "./RequestToRideModal";
@@ -23,11 +23,42 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [quickMessage, setQuickMessage] = useState("");
   const [showFullNotes, setShowFullNotes] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // Check if this offering is favorited with safe default
   const isFavorited = Array.isArray(userFavorites)
     ? userFavorites.includes(_id)
     : false;
+    
+  // Check if current user is the author of the offering
+  const isCurrentUserAuthor = userid === currentUserId;
+
+  // Fetch current user's ID on component mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found in local storage");
+          return;
+        }
+        const response = await fetch("http://localhost:5000/api/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setCurrentUserId(userData.user.uid);
+        } else {
+          console.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Truncate longer text like in DashboardOfferingCard
   const truncateText = (text, maxLength = 80) => {
@@ -201,7 +232,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
           <div className="d-flex justify-content-between align-items-center mt-3">
             <div className="d-flex align-items-center">
               <Person className="me-1 text-primary" size={16} />
-              <span className="small fw-bold">{maxSeats} / {originalMaxSeats || maxSeats} seats</span>
+              <span className="small fw-bold">{maxSeats} / {originalMaxSeats || maxSeats} Available Seats</span>
             </div>
             <div className="d-flex align-items-center">
               <People className="me-1 text-secondary" size={16} />
@@ -212,13 +243,13 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
 
         <Card.Footer className="bg-white border-0 p-2">
           <Button
-            variant="primary"
+            variant={isCurrentUserAuthor ? "secondary" : (maxSeats === 0 ? "secondary" : "primary")}
             size="sm"
             className="w-100"
-            onClick={() => setShowRequestModal(true)}
-            disabled={maxSeats === 0}
+            onClick={() => !isCurrentUserAuthor && maxSeats > 0 && setShowRequestModal(true)}
+            disabled={isCurrentUserAuthor || maxSeats === 0}
           >
-            {maxSeats === 0 ? "No Seats Available" : "Request to Ride"}
+            {isCurrentUserAuthor ? "Your Own Offering" : (maxSeats === 0 ? "No Seats Available" : "Request to Ride")}
           </Button>
         </Card.Footer>
       </Card>
@@ -262,7 +293,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
                 <div className="fw-bold mb-1 small">Vehicle Info</div>
                 <div className="text-break">
                   {userProfile.vehicleid
-                    ? `${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
+                    ? `${userProfile.vehicleid.color} ${userProfile.vehicleid.make} ${userProfile.vehicleid.model}`
                     : "No vehicle assigned"}
                 </div>
               </div>

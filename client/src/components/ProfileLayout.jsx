@@ -171,7 +171,7 @@ const ProfileLayout = () => {
         <div style={labelStyle}>Vehicle Info</div>
         <div>
           {userInfo.vehicle
-            ? `${userInfo.vehicle.make} ${userInfo.vehicle.model}`
+            ? `${userInfo.vehicle.color} ${userInfo.vehicle.make} ${userInfo.vehicle.model}`
             : "No vehicle assigned"}
         </div>
       </div>
