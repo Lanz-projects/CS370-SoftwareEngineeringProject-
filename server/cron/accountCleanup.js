@@ -37,7 +37,7 @@ async function deleteUserAndAssociatedData(uid) {
 }
 
 // Cron Schedule — runs once per minute
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   console.log('[CRON] Running account cleanup job...');
   await deleteUserAndAssociatedData(TEST_UID);
 });
