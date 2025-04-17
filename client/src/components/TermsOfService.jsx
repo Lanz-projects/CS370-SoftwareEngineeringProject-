@@ -23,7 +23,7 @@ function TermsOfService(){
 
               <h5>3. Limitation of Liability</h5>
               <p className={styles.cardText}>
-                The platform, its creators, and administrators are not responsible for any damages, injuries, losses, or inconveniences arising from the use of this web app. The platform does not guarantee the accuracy, reliability, or safety of any ride offers or requests posted on the app. Users are solely responsible for ensuring that the rides they offer or request are safe, legal, and in accordance with local laws.
+                The platform, its creators, and administrators are not responsible for any damages, injuries, losses, payments, or inconveniences arising from the use of this web app. The platform does not guarantee the accuracy, reliability, or safety of any ride offers or requests posted on the app. Users are solely responsible for ensuring that the rides they offer or request are safe, legal, and in accordance with local laws.
               </p>
 
               <h5>4. No Responsibility Outside the App</h5>
