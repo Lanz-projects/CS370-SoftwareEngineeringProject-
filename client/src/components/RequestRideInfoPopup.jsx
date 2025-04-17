@@ -43,7 +43,7 @@ function RequestRideInfoPopup() {
                 <h5>Ride Request Guide</h5>
                 <p>
                   This form allows you to request a ride by providing your
-                  destination and arrival details.
+                  destination and departure details.
                 </p>
 
                 <h6>Instructions:</h6>
@@ -65,14 +65,14 @@ function RequestRideInfoPopup() {
                     </ul>
                   </li>
                   <li>
-                    <strong>Arrival Date:</strong> Select when you need to arrive.
+                    <strong>Departure Date:</strong> Select when you need to arrive.
                     <ul>
                       <li>Must be today or a future date.</li>
                       <li>Cannot be more than 3 months in advance.</li>
                     </ul>
                   </li>
                   <li>
-                    <strong>Arrival Time:</strong> Enter the time you need to
+                    <strong>Departure Time:</strong> Enter the time you need to
                     arrive.
                     <ul>
                       <li>

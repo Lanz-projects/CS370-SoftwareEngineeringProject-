@@ -33,10 +33,10 @@ router.get("/all-requests", async (req, res) => {
 router.get("/api/recent-data", verifyToken, async (req, res) => {
   try {
     // Fetch the 5 most recent offerings sorted by createdTime
-    const offerings = await Offering.find({}).sort({ createdTime: -1 }).limit(5);
+    const offerings = await Offering.find({}).sort({ createdAt: -1 }).limit(5);
     
     // Fetch the 5 most recent requests sorted by createdTime
-    const requests = await Request.find({}).sort({ createdTime: -1 }).limit(5);
+    const requests = await Request.find({}).sort({ createdAt: -1 }).limit(5);
 
     // Combine offerings and requests into a single object
     const recentData = {

@@ -130,7 +130,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
 
 
     if (!arrivalDate) {
-      newErrors.arrivalDate = "Arrival date is required";
+      newErrors.arrivalDate = "Departure date is required";
     } else {
       // Parse the date string into year, month, day components
       const [year, month, day] = arrivalDate.split("-").map(Number);
@@ -149,14 +149,14 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       
       // Compare dates
       if (selectedDate < today) {
-        newErrors.arrivalDate = "Arrival date cannot be in the past";
+        newErrors.arrivalDate = "Departure date cannot be in the past";
       } else if (selectedDate > maxDate) {
-        newErrors.arrivalDate = "Arrival date cannot be more than three months ahead";
+        newErrors.arrivalDate = "Departure date cannot be more than three months ahead";
       }
     }
     
     if (!arrivalTime) {
-      newErrors.arrivalTime = "Arrival time is required";
+      newErrors.arrivalTime = "Departure time is required";
     } else if (arrivalDate) {
       // Parse date and time components
       const [year, month, day] = arrivalDate.split("-").map(Number);
@@ -170,7 +170,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
       
       // Compare full datetime objects directly
       if (arrivalDateTime < now) {
-        newErrors.arrivalTime = "Arrival time cannot be in the past";
+        newErrors.arrivalTime = "Departure time cannot be in the past";
       }
     }
 
@@ -328,7 +328,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Arrival Date (Max: 3 months in advance)</Form.Label>
+            <Form.Label>Departure Date (Max: 3 months in advance)</Form.Label>
             <Form.Control
               type="date"
               value={arrivalDate}
@@ -344,7 +344,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Arrival Time</Form.Label>
+            <Form.Label>Departure Time</Form.Label>
             <Form.Control
               type="time"
               value={arrivalTime}

@@ -542,4 +542,99 @@ router.delete(
   }
 );
 
+// Cancel a waiting list request
+router.post("/api/offering/:offeringId/cancel-waitlist-request", verifyToken, async (req, res) => {
+  const { offeringId } = req.params;
+  const userId = req.user.uid;
+  const { userId: requestedUserId } = req.body;
+  
+  // Ensure the requesting user can only cancel their own request
+  const userIdToRemove = userId === requestedUserId ? userId : userId;
+
+  try {
+    const offering = await Offering.findById(offeringId);
+    if (!offering) {
+      return res.status(404).json({ error: "Offering not found" });
+    }
+
+    // Check if user is in waiting list
+    const waitlistIndex = offering.waitingList.indexOf(userIdToRemove);
+    if (waitlistIndex === -1) {
+      return res.status(400).json({ error: "User is not on the waiting list" });
+    }
+
+    // Remove from waiting list
+    offering.waitingList.splice(waitlistIndex, 1);
+    
+    // Remove any quick message from this user
+    offering.quickMessage = offering.quickMessage.filter(
+      (msg) => msg.userid !== userIdToRemove
+    );
+
+    await offering.save();
+
+    res.json({
+      message: "Successfully removed from waiting list",
+      offering: {
+        waitingList: offering.waitingList,
+        maxSeats: offering.maxSeats
+      }
+    });
+
+  } catch (error) {
+    console.error("Error canceling waiting list request:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Cancel accepted ride request
+router.post("/api/offering/:offeringId/cancel-accepted-user", verifyToken, async (req, res) => {
+  const { offeringId } = req.params;
+  const userId = req.user.uid;
+  const { userId: requestedUserId } = req.body;
+  
+  // Ensure the requesting user can only cancel their own acceptance
+  const userIdToRemove = userId === requestedUserId ? userId : userId;
+
+  try {
+    const offering = await Offering.findById(offeringId);
+    if (!offering) {
+      return res.status(404).json({ error: "Offering not found" });
+    }
+
+    // Check if user is in accepted list
+    const acceptedIndex = offering.acceptedUsers.indexOf(userIdToRemove);
+    if (acceptedIndex === -1) {
+      return res.status(400).json({ error: "User is not in the accepted list" });
+    }
+
+    // Remove from accepted list
+    offering.acceptedUsers.splice(acceptedIndex, 1);
+    
+    // Remove any quick message from this user
+    offering.quickMessage = offering.quickMessage.filter(
+      (msg) => msg.userid !== userIdToRemove
+    );
+    
+    // Free up a seat
+    const originalMax = offering.originalMaxSeats || (offering.maxSeats + offering.acceptedUsers.length + 1);
+    offering.maxSeats = Math.min(offering.maxSeats + 1, originalMax);
+
+    await offering.save();
+
+    res.json({
+      message: "Successfully canceled accepted ride",
+      offering: {
+        acceptedUsers: offering.acceptedUsers,
+        maxSeats: offering.maxSeats
+      }
+    });
+
+  } catch (error) {
+    console.error("Error canceling accepted ride:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 module.exports = router;

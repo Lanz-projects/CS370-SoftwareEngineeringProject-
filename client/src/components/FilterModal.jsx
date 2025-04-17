@@ -83,8 +83,8 @@ const FilterModal = ({
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="default">Default</option>
-              <option value="soonest">Soonest Arrival Date</option>
-              <option value="latest">Latest Arrival Date</option>
+              <option value="soonest">Soonest Departure Date</option>
+              <option value="latest">Latest Departure Date</option>
             </Form.Select>
           </Form.Group>
         </Form>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Card, Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { Star, Person, People, StarFill, GeoAlt, Calendar, Clock, FileText } from "react-bootstrap-icons";
+import { Star, Person, People, StarFill, GeoAlt, Calendar, Clock, FileText, XCircle } from "react-bootstrap-icons";
 import RequestToRideModal from "./RequestToRideModal";
 
-const OfferingCard = ({ offering, userFavorites = [] }) => {
+const OfferingCard = ({ offering, userFavorites = [], onUpdateOffering }) => {
   const {
     _id,
     name,
@@ -16,6 +16,7 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     maxSeats = 0,
     originalMaxSeats,
     waitingList = [],
+    acceptedUsers = [],
   } = offering || {};
   
   const [showProfile, setShowProfile] = useState(false);
@@ -24,14 +25,84 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
   const [quickMessage, setQuickMessage] = useState("");
   const [showFullNotes, setShowFullNotes] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [localFavorites, setLocalFavorites] = useState(userFavorites);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isFavoriteProcessing, setIsFavoriteProcessing] = useState(false);
 
-  // Check if this offering is favorited with safe default
-  const isFavorited = Array.isArray(userFavorites)
-    ? userFavorites.includes(_id)
-    : false;
+  // Create a state to track favorite status that can be updated optimistically
+  const [isFavoritedLocal, setIsFavoritedLocal] = useState(
+    Array.isArray(localFavorites) ? localFavorites.includes(_id) : false
+  );
+  
+  // Update local favorite state when props change
+  useEffect(() => {
+    setIsFavoritedLocal(Array.isArray(userFavorites) ? userFavorites.includes(_id) : false);
+  }, [userFavorites, _id]);
     
   // Check if current user is the author of the offering
   const isCurrentUserAuthor = userid === currentUserId;
+  
+  // Debug logging to understand waitingList structure
+  /*
+  useEffect(() => {
+    if (currentUserId && waitingList.length > 0) {
+      console.log("Current User ID:", currentUserId);
+      console.log("Waiting List:", waitingList);
+    }
+  }, [currentUserId, waitingList]);
+  */
+
+  // Check if current user is already in the waiting list
+  // We need to check both userId and user format since the data structure might vary
+  const isUserInWaitingList = React.useMemo(() => {
+    if (!currentUserId || !Array.isArray(waitingList)) return false;
+    
+    return waitingList.some(item => 
+      // Check for various possible structures
+      item === currentUserId || 
+      item.userId === currentUserId || 
+      item.user === currentUserId ||
+      (item.user && item.user._id === currentUserId) ||
+      item._id === currentUserId
+    );
+  }, [waitingList, currentUserId]);
+  
+  // Check if current user is in accepted users list
+  const isUserAccepted = React.useMemo(() => {
+    if (!currentUserId || !Array.isArray(acceptedUsers)) return false;
+    
+    return acceptedUsers.some(item => 
+      item === currentUserId || 
+      item.userId === currentUserId || 
+      item.user === currentUserId ||
+      (item.user && item.user._id === currentUserId) ||
+      item._id === currentUserId
+    );
+  }, [acceptedUsers, currentUserId]);
+
+  // Auto-favorite when user is in waitingList or acceptedUsers
+  useEffect(() => {
+    const shouldAutoFavorite = (isUserInWaitingList || isUserAccepted) && !isFavoritedLocal && currentUserId;
+    
+    if (shouldAutoFavorite) {
+      addToFavorites();
+    }
+  }, [isUserInWaitingList, isUserAccepted, currentUserId]);
+  
+  // Determine if the user can request ride
+  const canRequestRide = !isCurrentUserAuthor && !isUserInWaitingList && !isUserAccepted && maxSeats > 0;
+
+  // Can cancel if user is in waiting list or accepted
+  const canCancelRequest = !isCurrentUserAuthor && (isUserInWaitingList || isUserAccepted);
+
+  // Get button text based on user status
+  const getButtonText = () => {
+    if (isCurrentUserAuthor) return "Your Own Offering";
+    if (isUserAccepted) return "You're Accepted";
+    if (isUserInWaitingList) return "In Waiting List";
+    if (maxSeats === 0) return "No Seats Available";
+    return "Request to Ride";
+  };
 
   // Fetch current user's ID on component mount
   useEffect(() => {
@@ -75,21 +146,24 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     return "Location not specified";
   };
 
-  // Handle favorite
-  const handleFavorite = async (e) => {
-    e.stopPropagation(); // Prevent card click event
+  // Add offering to favorites
+  const addToFavorites = async () => {
+    if (isFavoriteProcessing) return;
+    
+    // Update UI immediately
+    setIsFavoritedLocal(true);
+    setIsFavoriteProcessing(true);
+    
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         console.error("No authentication token found");
+        setIsFavoritedLocal(false); // Revert if failed
+        setIsFavoriteProcessing(false);
         return;
       }
 
-      const url = isFavorited
-        ? "http://localhost:5000/api/user/remove-favorite"
-        : "http://localhost:5000/api/user/favorite-offering";
-
-      const response = await fetch(url, {
+      const response = await fetch("http://localhost:5000/api/user/favorite-offering", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -104,12 +178,78 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
       const data = await response.json();
 
       if (response.ok) {
+        console.log("Successfully added to favorites");
+        // Only reload after successful response
         window.location.reload();
       } else {
-        console.error("Error handling favorite:", data.error);
+        console.error("Error adding to favorites:", data.error);
+        setIsFavoritedLocal(false); // Revert if failed
       }
     } catch (error) {
-      console.error("Error handling favorite:", error);
+      console.error("Error adding to favorites:", error);
+      setIsFavoritedLocal(false); // Revert if failed
+    } finally {
+      setIsFavoriteProcessing(false);
+    }
+  };
+
+  // Remove offering from favorites
+  const removeFromFavorites = async () => {
+    if (isFavoriteProcessing) return;
+    
+    // Update UI immediately
+    setIsFavoritedLocal(false);
+    setIsFavoriteProcessing(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No authentication token found");
+        setIsFavoritedLocal(true); // Revert if failed
+        setIsFavoriteProcessing(false);
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/user/remove-favorite", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          offeringId: _id,
+          type: "offering",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Successfully removed from favorites");
+        // Only reload after successful response
+        window.location.reload();
+      } else {
+        console.error("Error removing from favorites:", data.error);
+        setIsFavoritedLocal(true); // Revert if failed
+      }
+    } catch (error) {
+      console.error("Error removing from favorites:", error);
+      setIsFavoritedLocal(true); // Revert if failed
+    } finally {
+      setIsFavoriteProcessing(false);
+    }
+  };
+
+  // Handle favorite toggle
+  const handleFavorite = async (e) => {
+    e.stopPropagation(); // Prevent card click event
+    
+    if (isFavoriteProcessing) return;
+    
+    if (isFavoritedLocal) {
+      await removeFromFavorites();
+    } else {
+      await addToFavorites();
     }
   };
 
@@ -131,6 +271,51 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     }
   };
 
+  // Handle cancellation of ride request
+  const handleCancelRequest = async () => {
+    if (!currentUserId || isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No authentication token found");
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Determine if user is in waiting list or accepted users
+      const endpoint = isUserAccepted 
+        ? `/api/offering/${_id}/cancel-accepted-user`
+        : `/api/offering/${_id}/cancel-waitlist-request`;
+      
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUserId
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log("Successfully canceled request:", data.message);
+        window.location.reload();
+      } else {
+        console.error("Error canceling request:", data.error);
+      }
+    } catch (error) {
+      console.error("Error canceling request:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   function convertTo12HourFormat(arrivalTime) {
     if (!arrivalTime) return;
 
@@ -141,6 +326,14 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
     const formattedMinutes = String(minutes).padStart(2, "0");
     return `${hour12}:${formattedMinutes} ${amPm}`;
   }
+
+  // Handle successful request to ride by updating the UI and auto-favoriting
+  const handleSuccessfulRequest = () => {
+    // We'll simulate the user being added to the waiting list
+    if (!isFavoritedLocal) {
+      addToFavorites();
+    }
+  };
 
   if (!offering) {
     return <Card className="mb-3 p-3">No offering data available</Card>;
@@ -173,8 +366,11 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
               size="sm"
               className="border-0"
               onClick={handleFavorite}
+              disabled={isFavoriteProcessing}
             >
-              {isFavorited ? (
+              {isFavoriteProcessing ? (
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              ) : isFavoritedLocal ? (
                 <StarFill size={18} color="gold" />
               ) : (
                 <Star size={18} color="gray" />
@@ -242,15 +438,35 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
         </Card.Body>
 
         <Card.Footer className="bg-white border-0 p-2">
-          <Button
-            variant={isCurrentUserAuthor ? "secondary" : (maxSeats === 0 ? "secondary" : "primary")}
-            size="sm"
-            className="w-100"
-            onClick={() => !isCurrentUserAuthor && maxSeats > 0 && setShowRequestModal(true)}
-            disabled={isCurrentUserAuthor || maxSeats === 0}
-          >
-            {isCurrentUserAuthor ? "Your Own Offering" : (maxSeats === 0 ? "No Seats Available" : "Request to Ride")}
-          </Button>
+          <div className="d-flex">
+            <Button
+              variant={canRequestRide ? "primary" : "secondary"}
+              size="sm"
+              className={canCancelRequest ? "w-75 me-1" : "w-100"}
+              onClick={() => canRequestRide && setShowRequestModal(true)}
+              disabled={!canRequestRide}
+            >
+              {getButtonText()}
+            </Button>
+            
+            {canCancelRequest && (
+              <Button
+                variant="danger"
+                size="sm"
+                className="w-25"
+                onClick={handleCancelRequest}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : (
+                  <>
+                    Cancel
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </Card.Footer>
       </Card>
 
@@ -311,7 +527,11 @@ const OfferingCard = ({ offering, userFavorites = [] }) => {
 
       <RequestToRideModal
         show={showRequestModal}
-        handleClose={() => setShowRequestModal(false)}
+        handleClose={() => {
+          setShowRequestModal(false);
+          // After successfully submitting a request, update UI and auto-favorite
+          handleSuccessfulRequest();
+        }}
         quickMessage={quickMessage}
         setQuickMessage={setQuickMessage}
         offeringId={_id}

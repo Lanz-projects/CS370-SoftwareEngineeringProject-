@@ -18,7 +18,7 @@ function Navigationbar() {
         <Navbar.Collapse id = "basic-navbar-nav">
 
           <Nav className = {styles.customeNavLinkContainer}>
-            <Nav.Link as = {Link} to = "/" className = {styles.customNavLink}>Homepage</Nav.Link>
+            <Nav.Link as = {Link} to = "/" className = {styles.customNavLink}>Home</Nav.Link>
 
             {!user ? (
               <>

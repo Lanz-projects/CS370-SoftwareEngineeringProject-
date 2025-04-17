@@ -17,7 +17,7 @@ function HomePageLayout(){
                 We, as a group for this software engineering class, propose a new online web application integrated into Truman State’s domain. Our application will allow Truman students to coordinate ride-shares with ease, providing a much-needed service to our community. 
                 <br />
                 <br />
-                <strong>Why This Matters:</strong> International students often struggle to find rides to the grocery store or airport, and parents in the Truman Facebook group seek carpools for their children. Our app provides a secure, simple way to coordinate transportation needs.
+                <strong>Why This Matters:</strong> International students often struggle to find rides to the grocery store or airport, and parents in the Truman Facebook group seek carpools for their children. Our webapp provides a secure, simple way to coordinate transportation needs.
               </Card.Text>
               <Button variant="primary" className={styles.getStartedButton} onClick={(e) => navigate("/terms-and-conditions")}>Website Terms & Service</Button>
             </Card.Body>

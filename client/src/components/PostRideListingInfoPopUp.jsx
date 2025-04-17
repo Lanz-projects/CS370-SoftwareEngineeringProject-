@@ -65,7 +65,7 @@ function PostRideListingInfoPopup() {
                     </ul>
                   </li>
                   <li>
-                    <strong>Arrival Date:</strong> Select when you plan to arrive
+                    <strong>Departure Date:</strong> Select when you plan to arrive
                     at the destination.
                     <ul>
                       <li>Must be today or a future date.</li>
@@ -73,7 +73,7 @@ function PostRideListingInfoPopup() {
                     </ul>
                   </li>
                   <li>
-                    <strong>Arrival Time:</strong> Enter the time you expect to
+                    <strong>Departure Time:</strong> Enter the time you expect to
                     arrive at the destination.
                     <ul>
                       <li>

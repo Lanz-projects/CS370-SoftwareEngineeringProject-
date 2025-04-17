@@ -58,7 +58,7 @@ const RequestToRideModal = ({
       <Modal.Body>
         <div className="mb-3">
           <label htmlFor="quickMessage" className="form-label">
-            Is there anything you want to say?
+            Is there anything you want to say? (When you click confirm, this will show up in your favorites.)
           </label>
           <textarea
             id="quickMessage"

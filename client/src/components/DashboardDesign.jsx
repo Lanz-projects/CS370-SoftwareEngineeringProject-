@@ -63,6 +63,7 @@ function DashboardLayout() {
         }
 
         const data = await response.json();
+        //console.log(data);
         setOfferingList(data.offerings || []);
         setRequestList(data.requests || []);
 

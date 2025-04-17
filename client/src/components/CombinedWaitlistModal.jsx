@@ -12,6 +12,7 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
   const [availableSeats, setAvailableSeats] = useState(0);
   const [maxSeats, setMaxSeats] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [changesMade, setChangesMade] = useState(false);
 
   useEffect(() => {
     if (showModal) {
@@ -116,20 +117,12 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
       if (response.ok) {
         console.log(data.message);
         
-        // Optimistically update the UI
-        const updatedWaitlist = waitlistedUsers.filter(user => user.uid !== userId);
-        setWaitlistedUsers(updatedWaitlist);
+        // Mark that changes were made so we'll refresh on close
+        setChangesMade(true);
         
-        // Find the user that was accepted
-        const acceptedUser = waitlistedUsers.find(user => user.uid === userId);
-        if (acceptedUser) {
-          setAcceptedUsers(prev => [...prev, acceptedUser]);
-        }
-        
-        // Update available seats immediately
-        setAvailableSeats(prev => Math.max(0, prev - 1));
-
-        window.location.reload();
+        // Refresh data to show updated status
+        fetchWaitlist();
+        fetchAcceptedUsers();
       } else {
         alert(data.error + (data.details ? `: ${data.details}` : ""));
         // Refresh data to ensure consistency
@@ -174,12 +167,11 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
       if (response.ok) {
         console.log(data.message);
         
-        // Optimistically update the UI
-        setAcceptedUsers(prev => prev.filter(user => user.uid !== userId));
+        // Mark that changes were made so we'll refresh on close
+        setChangesMade(true);
         
-        // Update available seats immediately
-        setAvailableSeats(prev => prev + 1);
-        window.location.reload();
+        // Refresh data to show updated status
+        fetchAcceptedUsers();
       } else {
         console.error("Error removing user from accepted:", data.error);
         alert("An error occurred while removing the user.");
@@ -193,6 +185,14 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
       fetchAcceptedUsers();
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Custom close handler that refreshes the page if changes were made
+  const handleModalClose = () => {
+    handleCloseModal();
+    if (changesMade) {
+      window.location.reload();
     }
   };
 
@@ -212,7 +212,7 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
 
   return (
     <>
-      <Modal show={showModal} onHide={handleCloseModal} centered>
+      <Modal show={showModal} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
             {activeTab === "waitlist" ? "Waitlisted Users" : "Accepted Users"}
@@ -255,6 +255,12 @@ const CombinedWaitlistModal = ({ offeringId, showModal, handleCloseModal }) => {
           {isUpdating && (
             <Alert variant="info" className="py-2">
               Updating...
+            </Alert>
+          )}
+          
+          {changesMade && (
+            <Alert variant="success" className="py-2">
+              Changes saved! Close this modal to update the page.
             </Alert>
           )}
           
