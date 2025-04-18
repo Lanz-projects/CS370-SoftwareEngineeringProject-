@@ -6,6 +6,7 @@ const Offering = require('../models/Offering-schema');
 const Request = require('../models/Request-schema');
 const Vehicle = require('../models/Vehicle-schema');
 
+// Script to delete user using UID
 // CHANGE THIS to the test UID you want to delete
 const TEST_UID = '';
 
