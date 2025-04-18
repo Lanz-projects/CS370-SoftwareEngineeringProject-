@@ -5,6 +5,8 @@ const Vehicle = require("../models/Vehicle-schema"); // Import the Vehicle model
 const Offering = require("../models/Offering-schema");
 const Request = require("../models/Request-schema");
 const verifyToken = require("../middleware/verifyToken"); // Ensure users are authenticated
+const emailEvents = require('../emailEvents');
+
 
 const router = express.Router();
 
@@ -31,6 +33,9 @@ router.post("/api/signup", async (req, res) => {
       email,
     });
     await newUser.save();
+    // ✅ Send welcome email
+    await emailEvents.onAccountCreated(decodedToken.uid);
+
 
     res
       .status(201)
@@ -71,6 +76,9 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    // ✅ Store user email BEFORE deleting anything
+    const userEmail = user.email;
+
     // Delete associated offerings and requests
     await Offering.deleteMany({ userid: userId });
     await Request.deleteMany({ userid: userId });
@@ -85,6 +93,9 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
 
     // Delete user from Firebase Authentication
     await admin.auth().deleteUser(userId);
+
+    // ✅ Send the account deletion email
+    await emailEvents.onAccountDeleted(userEmail);
 
     res.json({
       message: "User deleted from Firebase and database successfully!",

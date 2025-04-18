@@ -3,6 +3,8 @@ const Offering = require("../models/Offering-schema");
 const User = require("../models/User-schema");
 const verifyToken = require("../middleware/verifyToken");
 const mongoose = require("mongoose");
+const emailEvents = require('../emailEvents');
+
 
 const router = express.Router();
 
@@ -117,6 +119,8 @@ router.post("/api/create-offering", verifyToken, async (req, res) => {
     });
 
     const savedOffering = await newOffering.save();
+    await emailEvents.onOfferCreated(userId);
+
 
     res.status(201).json({
       message: "Offering created successfully",
@@ -316,6 +320,8 @@ router.post("/api/request-ride/:offeringId", verifyToken, async (req, res) => {
     });
 
     await offering.save();
+    await emailEvents.onUserWantsToJoin(offeringId, userId);
+
 
     res.json({ message: "Successfully added to waiting list." });
   } catch (error) {
@@ -393,6 +399,8 @@ router.post(
       offering.maxSeats -= 1;
 
       await offering.save();
+      await emailEvents.onRequestAccepted(offering.userid, userId);
+
 
       res.json({
         message: "User moved to accepted users",
@@ -534,6 +542,7 @@ router.delete(
 
       await Offering.deleteOne({ _id: offeringObjectId });
 
+      await emailEvents.onOfferCancelled(userId, offering.acceptedUsers);
       res.json({ message: "Offering deleted successfully" });
     } catch (error) {
       console.error("Error deleting offering:", error);

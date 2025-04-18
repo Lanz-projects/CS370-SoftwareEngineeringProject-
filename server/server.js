@@ -1,4 +1,6 @@
 require('dotenv').config();
+//require('./watchUpdates');
+require('./cron/rideReminderJob')
 const express = require('express');
 const connectDB = require('./mongoConfig'); 
 const cors = require('cors');
