@@ -75,4 +75,12 @@ const UserSchema = new mongoose.Schema(
   { collection: "Users" }
 );
 
+<<<<<<< HEAD
 module.exports = mongoose.model("User", UserSchema);
+=======
+
+module.exports = mongoose.model('User', UserSchema);
+UserSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 }); // ⏱️ 1 minute for testing
+
+
+>>>>>>> JakeTimer
