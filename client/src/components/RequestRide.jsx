@@ -361,13 +361,13 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Notes</Form.Label>
+            <Form.Label>Notes: (Provide a general pickup location and send the accepter a more specific address.)</Form.Label>
             <Form.Control
               as="textarea"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes (max 200 characters)"
+              placeholder="What should the accepter know? (max 200 characters)"
               isInvalid={!!errors.notes}
               maxLength={200}
             />
@@ -386,7 +386,7 @@ const RequestRide = ({ show, handleClose, onRequestCreated }) => {
               rows={2}
               value={wants}
               onChange={(e) => setWants(e.target.value)}
-              placeholder="Enter any special requests (max 200 characters)"
+              placeholder="Enter any special requests. Accommodation is optional for the accepter. (max 200 characters)"
               isInvalid={!!errors.wants}
               maxLength={200}
             />

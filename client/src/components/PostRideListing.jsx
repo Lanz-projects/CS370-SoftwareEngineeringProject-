@@ -417,13 +417,13 @@ const PostRideListing = ({ show, handleClose, onOfferingCreated }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Notes</Form.Label>
+            <Form.Label>Notes (Provide a pickup location)</Form.Label>
             <Form.Control
               as="textarea"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes (max 200 characters)"
+              placeholder="What should the requesters know? (max 200 characters)"
               isInvalid={!!errors.notes}
               maxLength={200}
             />
