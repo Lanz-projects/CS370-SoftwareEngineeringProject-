@@ -312,7 +312,7 @@ const OfferingCard = ({ offering, userFavorites = [], onUpdateOffering }) => {
         </Card.Header>
 
         <Card.Body className="py-2">
-          <div className="small text-muted mb-2">Offering a ride</div>
+          <div className="medium text-muted mb-2">Offering a ride to:</div>
           
           <div className="d-flex align-items-center mb-2">
             <GeoAlt className="me-2 text-secondary" size={16} />

@@ -271,7 +271,7 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
         </Card.Header>
 
         <Card.Body className="py-2">
-          <div className="small text-muted mb-2">Request for a ride</div>
+          <div className="medium text-muted mb-2">Request for a ride to:</div>
           
           <div className="d-flex align-items-center mb-2">
             <GeoAlt className="me-2 text-secondary" size={16} />
@@ -298,8 +298,10 @@ const DashboardRequestCard = ({ request, userFavorites }) => {
           <div className="d-flex mb-2">
             <FileText className="me-2 text-secondary flex-shrink-0 mt-1" size={16} />
             <div>
+              <strong className="small">Notes: </strong>
               {notes && notes.length > 80 ? (
                 <div className="small">
+                  <strong>Notes: </strong>
                   {showFullNotes ? notes : truncateText(notes)}
                   <Button 
                     variant="link" 
