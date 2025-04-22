@@ -41,6 +41,12 @@ async function onRequestAccepted(offererUid, requesterUid) {
   await sendToUser(offererUid, 'You Accepted a Request', 'You accepted a rider into your offer.');
 }
 
+async function onJoinRequestCancelled(requesterUid, offererUid) {
+  await sendToUser(requesterUid, 'Request Cancelled', 'You cancelled your request to join a ride.');
+  await sendToUser(offererUid, 'Join Request Cancelled', 'A user has cancelled their request to join your ride.');
+}
+
+
 async function onOfferCancelled(offererUid, affectedUids = []) {
   await sendToUser(offererUid, 'Offer Cancelled', 'You cancelled your ride offer.');
   for (let uid of affectedUids) {
@@ -52,6 +58,12 @@ async function onRideRequestAccepted(posterUid, joinerUid) {
   await sendToUser(posterUid, 'Someone Joined Your Ride Request', 'A user has accepted your posted ride request.');
   await sendToUser(joinerUid, 'You Accepted a Ride Request', 'You accepted a ride request.');
 }
+
+async function onRideRequestCancelled(requesterUid, offererUid) {
+  await sendToUser(requesterUid, 'You Cancelled Your Ride', 'You have successfully left the ride.');
+  await sendToUser(offererUid, 'A Rider Cancelled', 'One of your accepted riders has cancelled their spot.');
+}
+
 
 async function onRideRequestDenied(posterUid, joinerUid) {
   await sendToUser(posterUid, 'Request Denied', 'Your ride request was denied.');
@@ -68,6 +80,18 @@ async function onRideReminder(rideInfo, uids) {
   }
 }
 
+async function onRequestPostCancelled(posterUid, acceptedUid) {
+  await sendToUser(posterUid, 'Request Deleted', 'You have deleted your ride request.');
+  await sendToUser(acceptedUid, 'Request You Accepted Was Deleted', 'A ride request you accepted has been deleted by the poster.');
+}
+
+
+async function onRiderRemoved(removedUserUid, offererUid) {
+  await sendToUser(removedUserUid, 'Removed From Ride', 'You have been removed from a ride you were accepted for.');
+  await sendToUser(offererUid, 'You Removed a Rider', 'You have successfully removed someone from your ride.');
+}
+
+
 async function onAccountDeleted(uid) {
   await sendToUser(uid, 'Account Deleted', 'Your RideShare account has been removed. We’re sorry to see you go!');
 }
@@ -78,9 +102,13 @@ module.exports = {
   onRequestSubmitted,
   onUserWantsToJoin,
   onRequestAccepted,
+  onJoinRequestCancelled,
   onOfferCancelled,
   onRideRequestAccepted,
+  onRideRequestCancelled,
   onRideRequestDenied,
   onRideReminder,
+  onRequestPostCancelled,
+  onRiderRemoved,
   onAccountDeleted,
 };

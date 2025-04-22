@@ -76,11 +76,8 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ Store user email BEFORE deleting anything
-    const userEmail = user.email;
-
     // ✅ Send the account deletion email
-    await emailEvents.onAccountDeleted(userEmail);
+    await emailEvents.onAccountDeleted(user.uid);
 
     // Delete associated offerings and requests
     await Offering.deleteMany({ userid: userId });

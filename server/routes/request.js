@@ -3,6 +3,7 @@ const Request = require("../models/Request-schema");
 const User = require("../models/User-schema.js");
 const verifyToken = require("../middleware/verifyToken");
 const mongoose = require("mongoose");
+const emailEvents = require('../emailEvents');
 
 const router = express.Router();
 
@@ -112,12 +113,17 @@ router.post("/api/create-request", verifyToken, async (req, res) => {
     }
 
     // Save the new request
-    await newRequest.save();
+    // Save the new request
+await newRequest.save();
 
-    res.status(201).json({ 
-      message: "Request added successfully!",
-      request: newRequest 
-    });
+// ✅ Send confirmation email
+await emailEvents.onRequestSubmitted(userId);
+
+res.status(201).json({ 
+  message: "Request added successfully!",
+  request: newRequest 
+});
+
 
   } catch (error) {
     console.error("Error processing request:", error);
@@ -265,6 +271,11 @@ router.delete("/api/delete-request/:id", verifyToken, async (req, res) => {
         error: "Request not found or does not belong to the authenticated user",
       });
     }
+
+    if (request.userAccepted) {
+      await emailEvents.onRequestPostCancelled(userId, request.userAccepted);
+    }
+    
 
     // Remove the request ID from all users' favoriteRequest arrays
     const result = await User.updateMany(

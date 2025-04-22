@@ -480,6 +480,8 @@ router.delete(
       offering.maxSeats = Math.min(offering.maxSeats + 1, originalMax);
 
       await offering.save();
+      await emailEvents.onRiderRemoved(user, offering.userid);
+
 
       res.json({
         message: "User removed from accepted users",
@@ -581,6 +583,8 @@ router.post("/api/offering/:offeringId/cancel-waitlist-request", verifyToken, as
     );
 
     await offering.save();
+    await emailEvents.onJoinRequestCancelled(userIdToRemove, offering.userid);
+
 
     res.json({
       message: "Successfully removed from waiting list",
@@ -630,6 +634,12 @@ router.post("/api/offering/:offeringId/cancel-accepted-user", verifyToken, async
     offering.maxSeats = Math.min(offering.maxSeats + 1, originalMax);
 
     await offering.save();
+
+    await offering.save();
+
+// ✅ Send email to both rider and offer host
+await emailEvents.onRideRequestCancelled(userId, offering.userid);
+
 
     res.json({
       message: "Successfully canceled accepted ride",
