@@ -79,6 +79,9 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
     // ✅ Store user email BEFORE deleting anything
     const userEmail = user.email;
 
+    // ✅ Send the account deletion email
+    await emailEvents.onAccountDeleted(userEmail);
+
     // Delete associated offerings and requests
     await Offering.deleteMany({ userid: userId });
     await Request.deleteMany({ userid: userId });
@@ -94,8 +97,6 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
     // Delete user from Firebase Authentication
     await admin.auth().deleteUser(userId);
 
-    // ✅ Send the account deletion email
-    await emailEvents.onAccountDeleted(userEmail);
 
     res.json({
       message: "User deleted from Firebase and database successfully!",
