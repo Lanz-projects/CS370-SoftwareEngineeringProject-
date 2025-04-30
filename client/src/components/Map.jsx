@@ -18,7 +18,7 @@ const Map = ({ offerings = [], requests = [], onMarkerClick, selectedMarkerId })
   // Memoize the loader options to prevent re-creation on every render
   const loaderOptions = useMemo(() => ({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyDLLZQYqM5iZ0WqouJ8xDqL4wURjagfm4s',
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries: ['places'],
   }), []);
 
