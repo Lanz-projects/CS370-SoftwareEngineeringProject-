@@ -17,8 +17,9 @@ const eachListingsRoutes = require('./routes/eachListings');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
 // Init Firebase Admin SDK
-const serviceAccount = require('./firebase-adminsdk.json'); 
+const serviceAccount = require('./cs370softwareeng-firebase-adminsdk-fbsvc-3fe9b75958.json'); 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
@@ -28,10 +29,9 @@ connectDB();
 
 // CORS Options
 const corsOptions = {
-    origin: ["http://localhost:5173", "https://accounts.google.com"], 
+    origin: ["http://localhost:5173", "https://accounts.google.com", "https://rideshare.truman.edu"], 
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, 
+    pials: true, 
 };
 
 // Middleware
@@ -70,3 +70,24 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
+
+
+// Endpoint to send Firebase config to frontend
+app.get("/api/firebase-config", (req, res) => {
+    res.json({
+      apiKey: process.env.VITE_API_KEY,
+      authDomain: process.env.VITE_AUTH_DOMAIN,
+      projectId: process.env.VITE_PROJECT_ID,
+      storageBucket: process.env.VITE_STORAGE_BUCKET,
+      messagingSenderId: process.env.VITE_MESSAGING_SENDER_ID,
+      appId: process.env.VITE_APP_ID,
+      measurementId: process.env.VITE_MEASURMENT_ID,
+    });
+  });
+
+// Endpoint of google map key
+app.get("/api/googlemap", (req, res) => {
+   res.json({
+     googleMapsApiKey: process.env.VITE_GOOGLE_MAPS_API_KEY,
+   });
+  });

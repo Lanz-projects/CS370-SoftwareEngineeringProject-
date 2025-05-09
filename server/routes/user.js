@@ -71,6 +71,7 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
   try {
     // Find the user by UID
     const user = await User.findOne({ uid: userId });
+    console.log(user);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -78,6 +79,7 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
 
     // ✅ Store user email BEFORE deleting anything
     const userEmail = user.email;
+
 
     // ✅ Send the account deletion email
     await emailEvents.onAccountDeleted(userEmail);
