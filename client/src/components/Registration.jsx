@@ -83,7 +83,7 @@ function Registration() {
           <div><strong>Note:</strong> 
             <ul>
               <li>
-                To preserve the accessibility and security of this application, the signup process is limited to only ~@truman.edu emails. Please sign up using your truman email to access this application.
+                To preserve the accessibility and security of this application, the signup process is limited to only ~@truman.edu emails. Please sign up using your Truman email to access this application.
               </li>
             </ul>
             </div>

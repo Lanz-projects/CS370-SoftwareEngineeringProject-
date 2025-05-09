@@ -82,7 +82,7 @@ router.delete("/api/delete-user", verifyToken, async (req, res) => {
 
 
     // ✅ Send the account deletion email
-    await emailEvents.onAccountDeleted(userEmail);
+    await emailEvents.onAccountDeleted(user.uid);
 
     // Delete associated offerings and requests
     await Offering.deleteMany({ userid: userId });
